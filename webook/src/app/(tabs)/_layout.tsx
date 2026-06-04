@@ -1,6 +1,6 @@
 import { Tabs } from "expo-router";
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { colors } from "@/theme";
+import { colors } from "@/styles/theme";
 
 export default function TabLayout() {
   return (
@@ -9,9 +9,10 @@ export default function TabLayout() {
         // Tab Bar Styles
         tabBarInactiveTintColor: colors.text,
         tabBarActiveTintColor: colors.primary,
+        tabBarHideOnKeyboard:true,
         tabBarStyle: {
           borderColor: colors.background,
-          backgroundColor: colors.background
+          backgroundColor: colors.background,
         },
         
         // Header Styles

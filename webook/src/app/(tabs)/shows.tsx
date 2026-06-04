@@ -1,5 +1,5 @@
 import { Text, View, StyleSheet } from "react-native";
-import { colors } from '../../theme';
+import { colors } from '../../styles/theme';
 
 export default function ShowsScreen() {
   return (
