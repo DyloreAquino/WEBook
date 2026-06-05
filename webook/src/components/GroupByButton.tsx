@@ -34,7 +34,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontFamily: fonts.medium,
-    fontSize: 16,
+    fontSize: 12,
     color: colors.textMuted,
   },
   label_active: {
