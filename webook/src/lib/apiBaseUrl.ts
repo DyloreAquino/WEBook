@@ -1,4 +1,3 @@
-// lib/apiBaseUrl.ts
 import { Platform } from "react-native"
 
 const PORT = 8000

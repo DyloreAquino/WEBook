@@ -1,18 +1,20 @@
-// hooks/useWrestlers.ts
 import { useQuery } from "@tanstack/react-query"
 import { api } from "@/lib/axios"
 import { Wrestler } from "@/types/wrestler"
+import { WrestlerFilters } from "@/types/filters"
+import { serializeFilters } from "@/lib/serializeFilters"
 
-async function fetchWrestlers(): Promise<Wrestler[]> {
-  // Laravel API Resource collections wrap rows in { data: [...] }.
-  // adjust if your endpoint returns a bare array.
-  const res = await api.get<{ data: Wrestler[] }>("/wrestlers")
-  return res.data.data
-}
-
-export function useWrestlers() {
+export function useWrestlers(filters: WrestlerFilters = {}) {
+  const params = serializeFilters(filters)
   return useQuery({
-    queryKey: ["wrestlers"],
-    queryFn: fetchWrestlers,
+    queryKey: ["wrestlers", params],
+    queryFn: async () => {
+      console.log("FETCHING URL:", api.getUri({ url: "/wrestlers", params }))
+      const res = await api.get("/wrestlers", { params })
+      console.log("GOT", res.data.data.length, "wrestlers")
+      return res.data.data
+    },
+    staleTime: 0,        // <- force stale so it always refetches
+    gcTime: 0,           // <- don't keep old cache
   })
 }

@@ -1,4 +1,3 @@
-// lib/axios.ts
 import axios from "axios"
 import { resolveBaseUrl } from "@/lib/apiBaseUrl"
 

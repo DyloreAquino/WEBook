@@ -1,0 +1,1 @@
+export type NamedEntity = { id: number; name: string }

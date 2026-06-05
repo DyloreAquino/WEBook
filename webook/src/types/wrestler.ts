@@ -2,10 +2,10 @@ import { Team } from "./team";
 import { Event } from "./event";
 import { TitleReign } from "./title_reign";
 
-type Gender = 'MALE' | 'FEMALE' | 'N/A';
-type Allegiance = 'HEEL' | 'FACE' | 'TWEENER';
-type Role = 'WRESTLER' | 'MANAGER' | 'BOOKER' | 'REFEREE' | 'CIVILIAN';
-type FinishType = 'UNFINISHED' | 'PIN' | 'SUBMISSION' | 'DISQUALIFICATION' | 'COUNTOUT' | 'TIMEOUT' | 'ELIMINATION' | 'SPECIAL';
+export type Gender = 'MALE' | 'FEMALE' | 'N/A';
+export type Allegiance = 'HEEL' | 'FACE' | 'TWEENER';
+export type Role = 'WRESTLER' | 'MANAGER' | 'BOOKER' | 'REFEREE' | 'CIVILIAN';
+export type FinishType = 'UNFINISHED' | 'PIN' | 'SUBMISSION' | 'DISQUALIFICATION' | 'COUNTOUT' | 'TIMEOUT' | 'ELIMINATION' | 'SPECIAL';
 
 export type Wrestler = {
   id: number;

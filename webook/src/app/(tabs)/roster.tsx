@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { StyleSheet, SectionList, View, Text, ActivityIndicator } from "react-native";
+import { StyleSheet, SectionList, View, Text, ActivityIndicator, TouchableOpacity } from "react-native";
 import { colors, fonts } from "../../styles/theme";
 import { GroupCategory } from "@/types/wrestler";
 import { groupWrestlers } from "@/lib/groupWrestlers";
@@ -7,10 +7,20 @@ import WrestlerCard from "@/components/WrestlerCard";
 import GroupByBar from "@/components/GroupByBar";
 import { useWrestlers } from "@/hooks/useWrestlers";
 import { RefreshControl } from "react-native"
+import { WrestlerFilters } from "@/types/filters";
+import { countActiveFilters } from "@/lib/serializeFilters";
+import FilterModal from "@/components/FilterModal";
 
+
+// TODO: Apply like filter to the search bar for names
+// TODO: Append territory and promotions filter instead of replacing
+// TODO: Territory and promotion names for the section headers
 export default function RosterScreen() {
   const [groupBy, setGroupBy] = useState<GroupCategory>("gender");
-  const { data: wrestlers, isLoading, isError, error, refetch, isRefetching } = useWrestlers()
+  const [filters, setFilters] = useState<WrestlerFilters>({})
+  const [filterOpen, setFilterOpen] = useState(false)
+  const { data: wrestlers, isLoading, isError, error, refetch, isRefetching } = useWrestlers(filters)
+  const activeCount = countActiveFilters(filters)
 
   const sections = useMemo(
     () => groupWrestlers(wrestlers ?? [], groupBy),
@@ -41,7 +51,22 @@ export default function RosterScreen() {
 
   return (
     <View style={styles.container}>
-      <GroupByBar active={groupBy} onChange={setGroupBy} />
+      <View style={styles.controls}>
+        <View style={{ flex: 1 }}>
+          <GroupByBar active={groupBy} onChange={setGroupBy} />
+        </View>
+        <TouchableOpacity
+          style={styles.filter_button}
+          onPress={() => setFilterOpen(true)}
+          activeOpacity={0.7}
+          accessibilityRole="button"
+          accessibilityLabel="Open filters"
+        >
+          <Text style={styles.filter_button_text}>
+            Filters{activeCount > 0 ? ` (${activeCount})` : ""}
+          </Text>
+        </TouchableOpacity>
+      </View>
       <SectionList
         sections={gridSections}
         keyExtractor={(item, index) => `row-${item[0]?.id ?? index}`}
@@ -68,6 +93,12 @@ export default function RosterScreen() {
             progressBackgroundColor={colors.surface}  // Android spinner bg
           />
         }
+      />
+      <FilterModal
+        visible={filterOpen}
+        applied={filters}
+        onApply={setFilters}
+        onClose={() => setFilterOpen(false)}
       />
     </View>
   )
@@ -112,4 +143,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     textAlign: "center",
   },
+  controls: { flexDirection: "row", alignItems: "center" },
+  filter_button: {
+    paddingHorizontal: 14, paddingVertical: 8, marginRight: 16,
+    borderRadius: 999, backgroundColor: colors.surface,
+    borderWidth: 1, borderColor: colors.border,
+  },
+  filter_button_text: { fontFamily: fonts.medium, fontSize: 13, color: colors.text },
 })
