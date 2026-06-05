@@ -1,78 +1,46 @@
 import { colors, fonts } from "@/styles/theme"
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native"
+import { View, Text, StyleSheet, TouchableOpacity, Platform } from "react-native"
 import { router } from "expo-router"
 import { Wrestler } from "@/types/wrestler"
-import Ionicons from "@expo/vector-icons/Ionicons"
+import WrestlerTag from "@/components/WrestlerTag"
 
-export default function WrestlerCard({wrestler} : {wrestler : Wrestler}) {
+export default function WrestlerCard({ wrestler }: { wrestler: Wrestler }) {
   return (
-    <TouchableOpacity 
-      style={styles.container} 
-      onPress={() => {router.push("/(tabs)/home")}}
+    <TouchableOpacity
+      style={styles.container}
+      activeOpacity={0.7}
+      accessibilityRole="button"
+      accessibilityLabel={`View ${wrestler.name}`}
+      onPress={() => router.push('/(tabs)/home')}
     >
-        <Text style={styles.name_text}>{wrestler.name}</Text>
-        <View style={styles.symbol_container}>
-          <View style={styles.symbol_label}>
-            <Ionicons name={'man'} color={colors.text} size={24} />
-            <Text style={styles.symbol_label_text}>MALE</Text>
-          </View>
-          <View style={styles.symbol_label}>
-            <Ionicons name={'happy'} color={colors.text} size={24} />
-            <Text style={styles.symbol_label_text}>FACE</Text>
-          </View>
-          <View style={styles.symbol_label}>
-            <Ionicons name={'barbell'} color={colors.text} size={24} />
-            <Text style={styles.symbol_label_text}>WRESTLER</Text>
-          </View>
-        </View>
-        
+      <Text style={styles.name_text} numberOfLines={1}>
+        {wrestler.name}
+      </Text>
+      <View style={styles.tag_container}>
+        <WrestlerTag type="gender" value={wrestler.gender} />
+        <WrestlerTag type="allegiance" value={wrestler.allegiance} />
+        <WrestlerTag type="role" value={wrestler.role} />
+      </View>
     </TouchableOpacity>
   )
 }
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection:'row',
-    marginHorizontal: 24,
-    marginVertical: 5,
+    width: Platform.OS === "web" ? 320 : "100%",  // grid cell on web, full row on mobile
     padding: 16,
-    backgroundColor: colors.secondary,
+    backgroundColor: colors.surface,
     borderRadius: 20,
-    shadowColor:'#000000',
-    shadowOffset:{
-      width: 0, 
-      height: 1
-    },
-    alignItems:'center',
-    justifyContent:'space-between',
-    height:80
   },
-  symbol_container: {
-    flexDirection:'row',
-    justifyContent: 'flex-end',
-    gap:12,
-    maxWidth: 200,
-  },
-  symbol_label: {
-    justifyContent:'center',
-    alignItems:'center',
-    padding:10,
-    width:56,
-  },
-  symbol_label_text: {
-    marginTop:4,
-    fontSize:12,
-    color:colors.text
+  tag_container: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    marginTop: 12,
   },
   name_text: {
-    flex:1,
     color: colors.text,
-    fontWeight:'bold',
-    fontFamily:fonts.regular,
-    marginRight:16,
-    fontSize:20
+    fontFamily: fonts.bold,
+    fontSize: 20,
   },
-  text: {
-    color: colors.text,
-  }
 })

@@ -36,3 +36,11 @@ export type Wrestler = {
   isWinner?: boolean;
   finishType?: FinishType;
 };
+
+export type GroupCategory =
+  | "none"
+  | "gender"
+  | "allegiance"
+  | "role"
+  | "territoryId"
+  | "promotionId"

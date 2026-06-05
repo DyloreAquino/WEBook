@@ -1,7 +1,10 @@
-import { StyleSheet, ScrollView, FlatList } from "react-native";
-import { colors } from '../../styles/theme';
-import { Wrestler } from "@/types/wrestler";
+import { useMemo, useState } from "react";
+import { StyleSheet, SectionList, View, Text } from "react-native";
+import { colors, fonts } from "../../styles/theme";
+import { Wrestler, GroupCategory } from "@/types/wrestler";
+import { groupWrestlers } from "@/lib/groupWrestlers";
 import WrestlerCard from "@/components/WrestlerCard";
+import GroupByBar from "@/components/GroupByBar";
 
 const DATA: Wrestler[] = [
   {
@@ -79,13 +82,41 @@ const DATA: Wrestler[] = [
 ];
 
 export default function RosterScreen() {
+  const [groupBy, setGroupBy] = useState<GroupCategory>("gender");
+
+  const sections = useMemo(
+    () => groupWrestlers(DATA, groupBy),
+    [groupBy]
+  );
+  
+  const gridSections = useMemo(
+    () => sections.map((s) => ({ title: s.title, data: [s.data] })),
+    [sections]
+  );
+
   return (
-    <FlatList
-      style={styles.container}
-      data={DATA}
-      renderItem={({item}) => <WrestlerCard wrestler={item} />}
-      keyExtractor={item => item.id.toString()}
-    />
+    <View style={styles.container}>
+      <GroupByBar active={groupBy} onChange={setGroupBy} />
+
+      <SectionList
+        sections={gridSections}
+        keyExtractor={(item, index) => `row-${item[0]?.id ?? index}`}
+        renderItem={({ item }) => (
+          <View style={styles.grid}>
+            {item.map((wrestler) => (
+              <WrestlerCard key={wrestler.id} wrestler={wrestler} />
+            ))}
+          </View>
+        )}
+        renderSectionHeader={({ section }) =>
+          section.title ? (
+            <Text style={styles.section_header}>{section.title.toUpperCase()}</Text>
+          ) : null
+        }
+        stickySectionHeadersEnabled
+        contentContainerStyle={styles.list_content}
+      />
+    </View>
   );
 }
 
@@ -94,8 +125,22 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  text: {
-    color: colors.text,
-    fontSize: 40,
-  }
+  list_content: {
+    paddingVertical: 12,
+  },
+  section_header: {
+    fontFamily: fonts.heading,
+    fontSize: 14,
+    color: colors.textMuted,
+    backgroundColor: colors.background, // opaque so cards don't bleed under the sticky header
+    paddingHorizontal: 24,
+    paddingVertical: 8,
+    marginTop:16
+  },
+  grid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 12,
+    paddingHorizontal: 16,
+  },
 });
