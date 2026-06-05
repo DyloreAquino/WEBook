@@ -1,4 +1,4 @@
-import { ScrollView, StyleSheet } from "react-native"
+import { View, ScrollView, StyleSheet } from "react-native"
 import { colors } from "@/styles/theme"
 import { GroupCategory } from "@/types/wrestler"
 import GroupByButton from "@/components/GroupByButton"
@@ -19,22 +19,18 @@ type GroupByBarProps = {
 
 export default function GroupByBar({ active, onChange }: GroupByBarProps) {
   return (
-    <ScrollView
-      horizontal
-      showsHorizontalScrollIndicator={false}
-      style={styles.bar}
-      contentContainerStyle={styles.content}
-    >
-      {CATEGORIES.map((c) => (
-        <GroupByButton
-          key={c.key}
-          label={c.label}
-          active={active === c.key}
-          // tap active category again -> ungroup. remove this branch for pure radio.
-          onPress={() => onChange(active === c.key ? "none" : c.key)}
-        />
-      ))}
-    </ScrollView>
+    <View style={styles.bar}>
+      <View style={styles.content}>
+        {CATEGORIES.map((c) => (
+          <GroupByButton
+            key={c.key}
+            label={c.label}
+            active={active === c.key}
+            onPress={() => onChange(active === c.key ? "none" : c.key)}
+          />
+        ))}
+      </View>
+    </View>
   )
 }
 
@@ -43,11 +39,12 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
-    flexGrow: 0, // stop ScrollView from eating vertical space
   },
   content: {
+    flexDirection: "row",
+    flexWrap: "wrap",      // pills wrap to a second line instead of clipping
     paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingVertical: 12,
     gap: 8,
   },
 })
