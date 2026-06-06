@@ -15,6 +15,7 @@ import SelectField from "@/components/SelectField"
 import { useUpdateWrestler, WrestlerUpdate } from "@/hooks/useUpdateWrestler"
 import { Gender, Allegiance, Role } from "@/types/wrestler"
 import WrestlerPickerModal from "@/components/WrestlerPickerModal"
+import HistoryModal from "@/components/HistoryModal"
 
 const STAT_KEYS = ["popularity", "strength", "skill", "agility", "stamina", "attitude"] as const
 const RELATIONS = [
@@ -47,6 +48,8 @@ export default function WrestlerDetailScreen() {
   const [draft, setDraft] = useState<WrestlerUpdate>({})
   const [pickerField, setPickerField] = useState<typeof RELATIONS[number][1] | null>(null)
   const update = useUpdateWrestler(wrestlerId)
+  const [historyOpen, setHistoryOpen] = useState(false)
+
 
   // which fields are editable — compare draft against the loaded wrestler
   const EDITABLE_KEYS = [
@@ -130,7 +133,7 @@ export default function WrestlerDetailScreen() {
               />
             )}
           </TouchableOpacity>
-          <TouchableOpacity style={styles.icon_button} accessibilityLabel="Wrestler history" onPress={() => { /* history modal — next pass */ }}>
+          <TouchableOpacity style={styles.icon_button} accessibilityLabel="Wrestler history" onPress={() => setHistoryOpen(true)}>
             <Ionicons name="book" color={colors.text} size={20} />
           </TouchableOpacity>
         </View>
@@ -249,6 +252,13 @@ export default function WrestlerDetailScreen() {
         }}
         onClose={() => setPickerField(null)}
       />
+      <HistoryModal 
+        visible={historyOpen} 
+        wrestlerName={w.name} 
+        events={[...(w.events ?? [])].sort(
+          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        )}
+        onClose={() => setHistoryOpen(false)} />
     </ScrollView>
   )
 }

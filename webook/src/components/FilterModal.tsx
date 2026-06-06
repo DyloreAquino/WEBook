@@ -162,7 +162,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
     borderTopLeftRadius: 24, borderTopRightRadius: 24,
     maxHeight: "85%", paddingTop: 20,
-      // shadow:
+    // shadow:
     shadowColor: "#000000",
     shadowOffset: { width: 0, height: -128 },  // negative height = shadow casts upward
     shadowOpacity: 0.4,

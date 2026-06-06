@@ -33,7 +33,7 @@ export type Wrestler = {
   events?: Event[];
   titleReigns?: TitleReign[];
   teams?: Team[];
-  isWinner?: boolean;
+  isWinner?: number;
   finishType?: FinishType;
 };
 
