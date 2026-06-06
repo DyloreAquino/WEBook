@@ -6,6 +6,7 @@ import { Wrestler } from "@/types/wrestler"
 // hooks/useUpdateWrestler.ts
 export type WrestlerUpdate = Partial<
   Pick<Wrestler,
+    | "name"
     | "gender" | "allegiance" | "role" | "territoryId" | "promotionId" | "finisherName"
     | "popularity" | "strength" | "skill" | "agility" | "stamina" | "attitude"
     | "managerId" | "partnerId" | "storyFriendId" | "storyEnemyId" | "realFriendId" | "realEnemyId"

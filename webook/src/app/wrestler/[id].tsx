@@ -53,6 +53,7 @@ export default function WrestlerDetailScreen() {
 
   // which fields are editable — compare draft against the loaded wrestler
   const EDITABLE_KEYS = [
+    "name",
     "gender", "allegiance", "role", "territoryId", "promotionId", "finisherName",
     ...STAT_KEYS,
     "managerId", "partnerId", "storyFriendId", "storyEnemyId", "realFriendId", "realEnemyId",
@@ -66,6 +67,7 @@ export default function WrestlerDetailScreen() {
   useEffect(() => {
     if (editing && w) {
       setDraft({
+        name: w.name,
         gender: w.gender, allegiance: w.allegiance, role: w.role,
         territoryId: w.territoryId, promotionId: w.promotionId, finisherName: w.finisherName,
         popularity: w.popularity, strength: w.strength, skill: w.skill,
@@ -105,7 +107,18 @@ export default function WrestlerDetailScreen() {
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
       {/* header: name + edit + history buttons */}
       <View style={styles.header}>
-        <Text style={styles.name} numberOfLines={2}>{w.name}</Text>
+        {editing ? (
+          <TextInput
+            style={styles.name_input}
+            value={draft.name ?? w.name}
+            onChangeText={(t) => setDraft((d) => ({ ...d, name: t }))}
+            placeholder="Wrestler name"
+            placeholderTextColor={colors.textMuted}
+            numberOfLines={1}
+          />
+        ) : (
+          <Text style={styles.name} numberOfLines={2}>{w.name}</Text>
+        )}
         <View style={styles.header_buttons}>
           <TouchableOpacity
             style={styles.icon_button}
@@ -279,6 +292,18 @@ const styles = StyleSheet.create({
   errorText: { fontFamily: fonts.bold, fontSize: 16, color: colors.text },
   header: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 16 },
   name: { flex: 1, fontFamily: fonts.bold, fontSize: 32, color: colors.text, marginRight: 12 },
+  name_input: {
+    flex: 1,
+    fontFamily: fonts.bold,
+    fontSize: 32,
+    color: colors.text,
+    marginRight: 12,
+    backgroundColor: colors.surface,
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    height: 56,        // fixed single-line height for the 32px font
+    width: 56
+  },
   header_buttons: { flexDirection: "row", gap: 8, paddingTop: 4 },
   icon_button: {
     width: 40, height: 40, borderRadius: 20,

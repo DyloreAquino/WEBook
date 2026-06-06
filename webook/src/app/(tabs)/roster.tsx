@@ -102,7 +102,7 @@ export default function RosterScreen() {
           />
         }
       />
-      <CreateButton href="/(tabs)/home" accessibilityLabel="Create wrestler" />
+      <CreateButton href="/wrestler/create" accessibilityLabel="Create wrestler" />
       <FilterModal
         visible={filterOpen}
         applied={filters}
