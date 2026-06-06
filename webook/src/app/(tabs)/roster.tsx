@@ -12,7 +12,10 @@ import { countActiveFilters } from "@/lib/serializeFilters";
 import FilterModal from "@/components/FilterModal";
 import { useTerritories } from "@/hooks/useTerritories";
 import { usePromotions } from "@/hooks/usePromotions";
+import CreateButton from "@/components/CreateButton";
 
+// TODO: Route wrestlers to detail screens
+// TODO: Route create button to actual create wrestler
 export default function RosterScreen() {
   const [groupBy, setGroupBy] = useState<GroupCategory>("gender");
   const [filters, setFilters] = useState<WrestlerFilters>({})
@@ -99,6 +102,7 @@ export default function RosterScreen() {
           />
         }
       />
+      <CreateButton href="/(tabs)/home" accessibilityLabel="Create wrestler" />
       <FilterModal
         visible={filterOpen}
         applied={filters}
