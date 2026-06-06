@@ -1,6 +1,5 @@
 import { useQuery } from "@tanstack/react-query"
 import { api } from "@/lib/axios"
-import { Wrestler } from "@/types/wrestler"
 import { WrestlerFilters } from "@/types/filters"
 import { serializeFilters } from "@/lib/serializeFilters"
 

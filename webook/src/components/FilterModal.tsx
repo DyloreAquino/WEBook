@@ -9,6 +9,7 @@ import { WrestlerFilters, StatKey, STAT_KEYS } from "@/types/filters"
 import FilterChipGroup from "@/components/FilterChipGroup"
 import { useTerritories } from "@/hooks/useTerritories"
 import { usePromotions } from "@/hooks/usePromotions"
+import Ionicons from "@expo/vector-icons/Ionicons"
 
 const GENDERS: Gender[] = ["MALE", "FEMALE", "N/A"]
 const ALLEGIANCES: Allegiance[] = ["FACE", "HEEL", "TWEENER"]
@@ -51,23 +52,25 @@ export default function FilterModal({ visible, applied, onApply, onClose }: Filt
         <View style={styles.sheet}>
           <View style={styles.header}>
             <Text style={styles.heading}>Filters</Text>
-            <TouchableOpacity onPress={() => setDraft({})} accessibilityRole="button">
-              <Text style={styles.reset}>Reset</Text>
+            <View style={{ width: 26 }} />
+            <TouchableOpacity onPress={onClose} accessibilityRole="button" accessibilityLabel="Close filters">
+              <Ionicons name="close" color={colors.text} size={26} />
             </TouchableOpacity>
           </View>
 
           <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
-            {/* name — exact match only; weak until backend adds 'like' */}
             <View style={styles.group}>
-              <Text style={styles.field_title}>NAME (EXACT)</Text>
+              <Text style={styles.field_title}>NAME</Text>
               <TextInput
                 style={styles.input}
-                placeholder="Full name…"
+                placeholder="Search name…"
                 placeholderTextColor={colors.textMuted}
                 value={draft.name ?? ""}
                 onChangeText={(t) => setDraft((d) => ({ ...d, name: t || undefined }))}
+                autoCapitalize="none"
+                autoCorrect={false}
               />
-            </View>
+            </View>   
 
             <FilterChipGroup
               title="Gender"
@@ -132,8 +135,11 @@ export default function FilterModal({ visible, applied, onApply, onClose }: Filt
           </ScrollView>
 
           <View style={styles.footer}>
-            <TouchableOpacity style={styles.cancel} onPress={onClose} activeOpacity={0.7}>
-              <Text style={styles.cancel_text}>Cancel</Text>
+            <TouchableOpacity style={styles.reset_button} 
+              onPress={() => { setDraft({}); onApply({}); onClose() }}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.reset_text}>Reset</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.apply}
@@ -150,18 +156,29 @@ export default function FilterModal({ visible, applied, onApply, onClose }: Filt
 }
 
 const styles = StyleSheet.create({
-  backdrop: { flex: 1, backgroundColor: "rgba(0,0,0,0.6)", justifyContent: "flex-end" },
+  backdrop: { 
+    flex: 1,
+    justifyContent: "flex-end"
+  },
   sheet: {
     backgroundColor: colors.background,
     borderTopLeftRadius: 24, borderTopRightRadius: 24,
     maxHeight: "85%", paddingTop: 20,
+      // shadow:
+    shadowColor: "#000000",
+    shadowOffset: { width: 0, height: -128 },  // negative height = shadow casts upward
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+    elevation: 20,  // android
   },
   header: {
-    flexDirection: "row", justifyContent: "space-between", alignItems: "center",
-    paddingHorizontal: 24, marginBottom: 16,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 24,
+    marginBottom: 16,
   },
   heading: { fontFamily: fonts.bold, fontSize: 22, color: colors.text },
-  reset: { fontFamily: fonts.medium, fontSize: 14, color: colors.accent },
   body: { paddingHorizontal: 24, paddingBottom: 20 },
   group: { marginBottom: 20 },
   field_title: { fontFamily: fonts.heading, fontSize: 13, color: colors.textMuted, marginBottom: 10 },
@@ -181,11 +198,14 @@ const styles = StyleSheet.create({
     flexDirection: "row", gap: 12, padding: 24,
     borderTopWidth: 1, borderTopColor: colors.border,
   },
-  cancel: {
-    flex: 1, paddingVertical: 14, borderRadius: 12,
-    backgroundColor: colors.surface, alignItems: "center",
+  reset_button: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 12,
+    backgroundColor: colors.surface,
+    alignItems: "center",
   },
-  cancel_text: { fontFamily: fonts.medium, fontSize: 15, color: colors.textMuted },
+  reset_text: { fontFamily: fonts.medium, fontSize: 15, color: colors.accent },
   apply: {
     flex: 2, paddingVertical: 14, borderRadius: 12,
     backgroundColor: colors.accent, alignItems: "center",

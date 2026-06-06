@@ -5,7 +5,7 @@ import { WrestlerFilters } from "@/types/filters"
 export function serializeFilters(f: WrestlerFilters): Record<string, string | number> {
   const params: Record<string, string | number> = {}
 
-  if (f.name) params["name[eq]"] = f.name
+  if (f.name) params["name[like]"] = f.name
   if (f.gender) params["gender[eq]"] = f.gender
   if (f.allegiance) params["allegiance[eq]"] = f.allegiance
   if (f.role) params["role[eq]"] = f.role

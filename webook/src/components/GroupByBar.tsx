@@ -37,8 +37,6 @@ export default function GroupByBar({ active, onChange }: GroupByBarProps) {
 const styles = StyleSheet.create({
   bar: {
     backgroundColor: colors.background,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
   },
   content: {
     flexDirection: "row",

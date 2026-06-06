@@ -12,7 +12,6 @@ import { countActiveFilters } from "@/lib/serializeFilters";
 import FilterModal from "@/components/FilterModal";
 
 
-// TODO: Apply like filter to the search bar for names
 // TODO: Append territory and promotions filter instead of replacing
 // TODO: Territory and promotion names for the section headers
 export default function RosterScreen() {
@@ -143,7 +142,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     textAlign: "center",
   },
-  controls: { flexDirection: "row", alignItems: "center" },
+  controls: { 
+    flexDirection: "row", 
+    alignItems: "center",
+    borderBottomWidth: 1,
+    borderColor: colors.surface
+  },
   filter_button: {
     paddingHorizontal: 14, paddingVertical: 8, marginRight: 16,
     borderRadius: 999, backgroundColor: colors.surface,
