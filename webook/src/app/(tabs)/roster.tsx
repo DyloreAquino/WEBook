@@ -11,8 +11,6 @@ import { WrestlerFilters } from "@/types/filters";
 import { countActiveFilters } from "@/lib/serializeFilters";
 import FilterModal from "@/components/FilterModal";
 
-
-// TODO: Append territory and promotions filter instead of replacing
 // TODO: Territory and promotion names for the section headers
 export default function RosterScreen() {
   const [groupBy, setGroupBy] = useState<GroupCategory>("gender");

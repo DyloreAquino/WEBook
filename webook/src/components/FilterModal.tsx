@@ -38,7 +38,7 @@ export default function FilterModal({ visible, applied, onApply, onClose }: Filt
     if (visible) setDraft(applied)
   }, [visible, applied])
 
-  const setStat = (stat: StatKey, bound: "gt" | "lt", raw: string) => {
+  const setStat = (stat: StatKey, bound: "gte" | "lte", raw: string) => {
     const value = raw.trim() === "" ? undefined : Number(raw)
     setDraft((d) => ({
       ...d,
@@ -75,60 +75,58 @@ export default function FilterModal({ visible, applied, onApply, onClose }: Filt
             <FilterChipGroup
               title="Gender"
               options={GENDERS.map((g) => ({ value: g, label: g }))}
-              selected={draft.gender}
-              onSelect={(v) => setDraft((d) => ({ ...d, gender: v }))}
+              selected={draft.gender ?? []}
+              onChange={(v) => setDraft((d) => ({ ...d, gender: v.length ? v : undefined }))}
             />
             <FilterChipGroup
               title="Allegiance"
               options={ALLEGIANCES.map((a) => ({ value: a, label: a }))}
-              selected={draft.allegiance}
-              onSelect={(v) => setDraft((d) => ({ ...d, allegiance: v }))}
+              selected={draft.allegiance ?? []}
+              onChange={(v) => setDraft((d) => ({ ...d, allegiance: v.length ? v : undefined }))}
             />
             <FilterChipGroup
               title="Role"
               options={ROLES.map((r) => ({ value: r, label: r }))}
-              selected={draft.role}
-              onSelect={(v) => setDraft((d) => ({ ...d, role: v }))}
+              selected={draft.role ?? []}
+              onChange={(v) => setDraft((d) => ({ ...d, role: v.length ? v : undefined }))}
             />
 
-            {/* relational — depends on territory/promotion endpoints being live */}
             {territories && territories.length > 0 && (
               <FilterChipGroup
                 title="Territory"
                 options={territories.map((t) => ({ value: t.id, label: t.name }))}
-                selected={draft.territoryId}
-                onSelect={(v) => setDraft((d) => ({ ...d, territoryId: v }))}
+                selected={draft.territoryId ?? []}
+                onChange={(v) => setDraft((d) => ({ ...d, territoryId: v.length ? v : undefined }))}
               />
             )}
             {promotions && promotions.length > 0 && (
               <FilterChipGroup
                 title="Promotion"
                 options={promotions.map((p) => ({ value: p.id, label: p.name }))}
-                selected={draft.promotionId}
-                onSelect={(v) => setDraft((d) => ({ ...d, promotionId: v }))}
+                selected={draft.promotionId ?? []}
+                onChange={(v) => setDraft((d) => ({ ...d, promotionId: v.length ? v : undefined }))}
               />
             )}
 
-            {/* stats — bounds are EXCLUSIVE (gt/lt, not gte/lte) */}
-            <Text style={styles.field_title}>STATS (EXCLUSIVE BOUNDS)</Text>
+            <Text style={styles.field_title}>STATS</Text>
             {STAT_KEYS.map((stat) => (
               <View key={stat} style={styles.stat_row}>
                 <Text style={styles.stat_label}>{STAT_LABELS[stat]}</Text>
                 <TextInput
                   style={styles.stat_input}
-                  placeholder="above"
+                  placeholder="min"
                   placeholderTextColor={colors.textMuted}
                   keyboardType="numeric"
-                  value={draft.stats?.[stat]?.gt?.toString() ?? ""}
-                  onChangeText={(t) => setStat(stat, "gt", t)}
+                  value={draft.stats?.[stat]?.gte?.toString() ?? ""}
+                  onChangeText={(t) => setStat(stat, "gte", t)}
                 />
                 <TextInput
                   style={styles.stat_input}
-                  placeholder="below"
+                  placeholder="max"
                   placeholderTextColor={colors.textMuted}
                   keyboardType="numeric"
-                  value={draft.stats?.[stat]?.lt?.toString() ?? ""}
-                  onChangeText={(t) => setStat(stat, "lt", t)}
+                  value={draft.stats?.[stat]?.lte?.toString() ?? ""}
+                  onChangeText={(t) => setStat(stat, "lte", t)}
                 />
               </View>
             ))}
