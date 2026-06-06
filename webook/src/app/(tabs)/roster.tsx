@@ -10,18 +10,26 @@ import { RefreshControl } from "react-native"
 import { WrestlerFilters } from "@/types/filters";
 import { countActiveFilters } from "@/lib/serializeFilters";
 import FilterModal from "@/components/FilterModal";
+import { useTerritories } from "@/hooks/useTerritories";
+import { usePromotions } from "@/hooks/usePromotions";
 
-// TODO: Territory and promotion names for the section headers
 export default function RosterScreen() {
   const [groupBy, setGroupBy] = useState<GroupCategory>("gender");
   const [filters, setFilters] = useState<WrestlerFilters>({})
   const [filterOpen, setFilterOpen] = useState(false)
   const { data: wrestlers, isLoading, isError, error, refetch, isRefetching } = useWrestlers(filters)
   const activeCount = countActiveFilters(filters)
+  const { data: territories } = useTerritories()
+  const { data: promotions } = usePromotions()
+
+  const labelMaps = useMemo(() => ({
+    territoryId: Object.fromEntries((territories ?? []).map((t) => [String(t.id), t.name])),
+    promotionId: Object.fromEntries((promotions ?? []).map((p) => [String(p.id), p.name])),
+  }), [territories, promotions])
 
   const sections = useMemo(
-    () => groupWrestlers(wrestlers ?? [], groupBy),
-    [wrestlers, groupBy]
+    () => groupWrestlers(wrestlers ?? [], groupBy, labelMaps),
+    [wrestlers, groupBy, labelMaps]
   )
   
   const gridSections = useMemo(

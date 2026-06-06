@@ -1,5 +1,4 @@
-import { Wrestler } from "@/types/wrestler"
-import { GroupCategory } from "@/types/wrestler"
+import { Wrestler, GroupCategory } from "@/types/wrestler"
 
 export type WrestlerSection = { title: string; data: Wrestler[] }
 
