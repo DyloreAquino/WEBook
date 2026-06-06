@@ -11,7 +11,7 @@ export default function WrestlerCard({ wrestler }: { wrestler: Wrestler }) {
       activeOpacity={0.7}
       accessibilityRole="button"
       accessibilityLabel={`View ${wrestler.name}`}
-      onPress={() => router.push('/(tabs)/home')}
+      onPress={() => router.push({ pathname: "/wrestler/[id]", params: { id: wrestler.id } })}
     >
       <Text style={styles.name_text} numberOfLines={1}>
         {wrestler.name}

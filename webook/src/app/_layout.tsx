@@ -4,6 +4,7 @@ import * as SplashScreen from "expo-splash-screen"
 import { useEffect } from "react"
 import { Stack } from 'expo-router';
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+import { colors } from "@/styles/theme";
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, staleTime: 30_000 } },
@@ -28,7 +29,12 @@ export default function RootLayout() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <Stack>
+      <Stack screenOptions={{
+        headerStyle: { backgroundColor: colors.background },
+        headerTintColor: colors.text,
+        headerTitle: "",
+        headerShadowVisible: false,
+      }}>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }}/>
       </Stack>
     </QueryClientProvider>
