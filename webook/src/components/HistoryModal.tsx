@@ -18,8 +18,6 @@ export default function HistoryModal({ visible, wrestlerName, events, onClose }:
   const { data: championships } = useChampionships()
   const { data: shows } = useShows()
 
-  console.log("SHOWS MAP SIZE:", shows?.size)
-
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={styles.backdrop}>
