@@ -19,4 +19,3 @@ function lookupHook(path: string, key: string) {
 }
 
 export const useMatchTypes = lookupHook("/match_types", "matchTypes")
-export const useChampionships = lookupHook("/championships", "championships")

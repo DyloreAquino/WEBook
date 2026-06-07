@@ -1,5 +1,6 @@
 import { colors, fonts } from "@/styles/theme"
-import { View, Text, StyleSheet } from "react-native"
+import { View, Text, StyleSheet, TouchableOpacity } from "react-native"
+import { router } from "expo-router"
 import { Event } from "@/types/event"
 import EventTag from "@/components/EventTag"
 import { TYPE_TAG, PLACEMENT_TAG } from "@/lib/eventTags"
@@ -23,7 +24,13 @@ export default function WrestlerEventCard({
   const wrestlers = event.wrestlers ?? []
 
   return (
-    <View style={styles.card}>
+    <TouchableOpacity
+      style={styles.card}
+      activeOpacity={0.7}
+      onPress={() => router.push({ pathname: "/event/[id]", params: { id: event.id } })}
+      accessibilityRole="button"
+      accessibilityLabel={`View event details`}
+    >
       {/* header: title + matchtype + placement on the left, result tag top-right */}
       <View style={styles.header}>
         <View style={styles.header_left}>
@@ -68,7 +75,7 @@ export default function WrestlerEventCard({
       )}
 
       {championshipName ? <Text style={styles.meta}>{championshipName}</Text> : null}
-    </View>
+    </TouchableOpacity>
   )
 }
 

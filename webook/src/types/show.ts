@@ -10,6 +10,7 @@ export type Show = {
   week: number
   type: ShowType
   territoryId: number
+  promotionId: number
   createdAt: string
   updatedAt: string
   events?: Event[]

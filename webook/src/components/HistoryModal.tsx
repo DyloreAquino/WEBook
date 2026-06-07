@@ -3,7 +3,8 @@ import Ionicons from "@expo/vector-icons/Ionicons"
 import { colors, fonts } from "@/styles/theme"
 import { Event } from "@/types/event"
 import WrestlerEventCard from "@/components/WrestlerEventCard"
-import { useMatchTypes, useChampionships } from "@/hooks/useLookups"
+import { useMatchTypes } from "@/hooks/useLookups"
+import { useChampionships } from "@/hooks/useChampionships"
 import { useShows } from "@/hooks/useShows"
 
 type Props = {
@@ -38,7 +39,7 @@ export default function HistoryModal({ visible, wrestlerName, events, onClose }:
               <WrestlerEventCard
                 event={item}
                 matchTypeName={item.matchTypeId != null ? matchTypes?.get(item.matchTypeId) ?? null : null}
-                championshipName={item.championshipId != null ? championships?.get(item.championshipId) ?? null : null}
+                championshipName={item.championshipId != null ? championships?.get(item.championshipId)?.name ?? null : null}
                 show={item.showId != null ? shows?.get(item.showId) ?? null : null}
               />
             )}

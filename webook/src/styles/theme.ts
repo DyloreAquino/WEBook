@@ -1,5 +1,5 @@
 export const colors = {
-  background: '#160F0F',   // warm near-black, base
+  background: '#0f0d0d',   // warm near-black, base
   surface: '#241A1A',      // dark warm brown-black, for cards
   border: '#3D2C2C',       // subtle warm divider
   text: '#F5EFE3',         // warm cream
