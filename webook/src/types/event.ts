@@ -17,6 +17,7 @@ export type Event = {
   matchTypeId: number | null
   championshipId: number | null
   showId: number
+  notes: string | null
   createdAt: string
   updatedAt: string
   wrestlers?: EventWrestler[]          // whenLoaded — for the show view

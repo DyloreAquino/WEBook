@@ -91,31 +91,26 @@ export default function ShowDetail({ show, loading }: { show: Show; loading?: bo
 
       {/* actions */}
       <View style={styles.actions}>
-        <TouchableOpacity style={styles.btn} onPress={onEditPress} disabled={update.isPending} activeOpacity={0.7}>
+        <TouchableOpacity style={styles.delete_btn} onPress={() => setConfirmOpen(true)} activeOpacity={0.7} accessibilityLabel="Delete show">
+          <Ionicons name="trash" color={colors.primary} size={18} />
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.delete_btn} onPress={onEditPress} disabled={update.isPending} activeOpacity={0.7}>
           {update.isPending
             ? <ActivityIndicator color={colors.text} size="small" />
             : <Ionicons name={!editing ? "pencil" : hasChanges ? "checkmark" : "close"}
                 color={hasChanges ? colors.accent : colors.text} size={16} />}
-          <Text style={styles.btn_text}>{!editing ? "Edit" : hasChanges ? "Save" : "Cancel"}</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.btn} onPress={() => { /* simulate page — later */ }} activeOpacity={0.7}>
-          <Ionicons name="play" color={colors.text} size={16} />
-          <Text style={styles.btn_text}>Simulate</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.delete_btn} onPress={() => setConfirmOpen(true)} activeOpacity={0.7} accessibilityLabel="Delete show">
-          <Ionicons name="trash" color={colors.primary} size={18} />
+        {/* add event */}
+        <TouchableOpacity
+          style={styles.add_event}
+          onPress={() => router.push({ pathname: "/event/create", params: { showId: String(show.id) } })}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="add" color={colors.accent} size={18} />
+          <Text style={styles.add_event_text}>Add Event</Text>
         </TouchableOpacity>
       </View>
 
-      {/* add event */}
-      <TouchableOpacity
-        style={styles.add_event}
-        onPress={() => router.push({ pathname: "/event/create", params: { showId: String(show.id) } })}
-        activeOpacity={0.7}
-      >
-        <Ionicons name="add" color={colors.accent} size={18} />
-        <Text style={styles.add_event_text}>Add Event</Text>
-      </TouchableOpacity>
 
       {/* events grouped by placement */}
       <View style={styles.events}>
@@ -167,20 +162,21 @@ const styles = StyleSheet.create({
   sub: { fontFamily: fonts.regular, fontSize: 13, color: colors.textMuted, marginTop: 4, marginBottom: 8 },
   type_tag: { backgroundColor: colors.accent, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 3 },
   type_text: { fontFamily: fonts.bold, fontSize: 11, color: colors.text },
-  actions: { flexDirection: "row", gap: 8, marginBottom: 12 },
+  actions: { flexDirection: "row", gap: 8, marginBottom: 12, justifyContent:'center' },
   btn: {
     flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6,
     backgroundColor: colors.background, borderRadius: 10, paddingVertical: 12, borderWidth: 1, borderColor: colors.border,
   },
   btn_text: { fontFamily: fonts.medium, fontSize: 13, color: colors.text },
   delete_btn: {
+    height:44,
     width: 44, backgroundColor: colors.background, borderRadius: 10,
     alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: colors.border,
   },
   add_event: {
     flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6,
     paddingVertical: 12, borderRadius: 10, borderWidth: 1, borderColor: colors.accent,
-    borderStyle: "dashed", marginBottom: 18,
+    borderStyle: "dashed", marginBottom: 18, width:192
   },
   add_event_text: { fontFamily: fonts.medium, fontSize: 14, color: colors.accent },
   events: {},
