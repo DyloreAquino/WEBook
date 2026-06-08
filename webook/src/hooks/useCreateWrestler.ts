@@ -13,11 +13,6 @@ export type WrestlerCreate = {
   promotionId: number
   finisherName: string
   popularity: number
-  strength: number
-  skill: number
-  agility: number
-  stamina: number
-  attitude: number
   managerId?: number | null
   partnerId?: number | null
   storyFriendId?: number | null

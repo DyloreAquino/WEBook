@@ -17,7 +17,6 @@ import { Gender, Allegiance, Role } from "@/types/wrestler"
 import WrestlerPickerModal from "@/components/WrestlerPickerModal"
 import HistoryModal from "@/components/HistoryModal"
 
-const STAT_KEYS = ["popularity", "strength", "skill", "agility", "stamina", "attitude"] as const
 const RELATIONS = [
   ["Manager", "managerId"],
   ["Partner", "partnerId"],
@@ -30,11 +29,6 @@ const RELATIONS = [
 const GENDERS: Gender[] = ["MALE", "FEMALE", "N/A"]
 const ALLEGIANCES: Allegiance[] = ["FACE", "HEEL", "TWEENER"]
 const ROLES: Role[] = ["WRESTLER", "MANAGER", "REFEREE", "BOOKER", "CIVILIAN"]
-
-const STATS = [
-  ["Popularity", "popularity"], ["Strength", "strength"], ["Skill", "skill"],
-  ["Agility", "agility"], ["Stamina", "stamina"], ["Attitude", "attitude"],
-] as const
 
 export default function WrestlerDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
@@ -55,7 +49,7 @@ export default function WrestlerDetailScreen() {
   const EDITABLE_KEYS = [
     "name",
     "gender", "allegiance", "role", "territoryId", "promotionId", "finisherName",
-    ...STAT_KEYS,
+    "popularity",
     "managerId", "partnerId", "storyFriendId", "storyEnemyId", "realFriendId", "realEnemyId",
   ] as const
 
@@ -70,8 +64,7 @@ export default function WrestlerDetailScreen() {
         name: w.name,
         gender: w.gender, allegiance: w.allegiance, role: w.role,
         territoryId: w.territoryId, promotionId: w.promotionId, finisherName: w.finisherName,
-        popularity: w.popularity, strength: w.strength, skill: w.skill,
-        agility: w.agility, stamina: w.stamina, attitude: w.attitude,
+        popularity: w.popularity,
         managerId: w.managerId, partnerId: w.partnerId,
         storyFriendId: w.storyFriendId, storyEnemyId: w.storyEnemyId,
         realFriendId: w.realFriendId, realEnemyId: w.realEnemyId,
@@ -80,16 +73,16 @@ export default function WrestlerDetailScreen() {
   }, [editing, w])
 
   const applyEdits = () => {
-    const clamped = { ...draft }
-    for (const k of STAT_KEYS) {
-      if (clamped[k] != null) clamped[k] = Math.max(50, Math.min(100, clamped[k] as number))
+    const payload = { ...draft }
+    if (payload.popularity != null) {
+      payload.popularity = Math.max(50, Math.min(100, payload.popularity))
     }
-    update.mutate(clamped, { onSuccess: () => setEditing(false) })
+    update.mutate(payload, { onSuccess: () => setEditing(false) })
   }
 
-  const setStat = (key: typeof STAT_KEYS[number], raw: string) => {
+  const setPopularity = (raw: string) => {
     const v = raw.trim() === "" ? undefined : Number(raw)
-    setDraft((d) => ({ ...d, [key]: v }))
+    setDraft((d) => ({ ...d, popularity: v }))
   }
 
 
@@ -209,25 +202,20 @@ export default function WrestlerDetailScreen() {
         </>
       )}
 
-      <Text style={styles.section_title}>STATS</Text>
       {editing ? (
-        STAT_KEYS.map((key) => (
-          <View key={key} style={styles.stat_edit_row}>
-            <Text style={styles.stat_edit_label}>{key.charAt(0).toUpperCase() + key.slice(1)}</Text>
-            <TextInput
-              style={styles.stat_edit_input}
-              keyboardType="numeric"
-              value={draft[key]?.toString() ?? ""}
-              onChangeText={(t) => setStat(key, t)}
-              placeholder="50–100"
-              placeholderTextColor={colors.textMuted}
-            />
-          </View>
-        ))
+        <View style={styles.stat_edit_row}>
+          <Text style={styles.stat_edit_label}>Popularity</Text>
+          <TextInput
+            style={styles.stat_edit_input}
+            keyboardType="numeric"
+            value={draft.popularity?.toString() ?? ""}
+            onChangeText={setPopularity}
+            placeholder="50–100"
+            placeholderTextColor={colors.textMuted}
+          />
+        </View>
       ) : (
-        STATS.map(([label, key]) => (
-          <StatBar key={key} label={label} value={w[key] as number} />
-        ))
+        <StatBar label="Popularity" value={w.popularity} />
       )}
 
       <Text style={styles.section_title}>RELATIONSHIPS</Text>

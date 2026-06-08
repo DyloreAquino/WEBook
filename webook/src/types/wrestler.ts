@@ -19,11 +19,11 @@ export type Wrestler = {
   territoryId: number;
   promotionId: number;
   popularity: number;
-  strength: number;
-  skill: number;
-  agility: number;
-  stamina: number;
-  attitude: number;
+  strength: number | null;
+  skill: number | null;
+  agility: number | null;
+  stamina: number | null;
+  attitude: number | null;
   managerId: number | null;
   partnerId: number | null;
   storyFriendId: number | null;

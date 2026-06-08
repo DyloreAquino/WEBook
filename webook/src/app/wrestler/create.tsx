@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { ScrollView, View, Text, TextInput, StyleSheet, TouchableOpacity, ActivityIndicator } from "react-native"
 import { router } from "expo-router"
 import Ionicons from "@expo/vector-icons/Ionicons"
@@ -10,11 +10,12 @@ import { useWrestlerLookup } from "@/hooks/useWrestlerLookup"
 import { useCreateWrestler, WrestlerCreate } from "@/hooks/useCreateWrestler"
 import SelectField from "@/components/SelectField"
 import WrestlerPickerModal from "@/components/WrestlerPickerModal"
+import { useManagedPromotion } from "@/context/PromotionContext"
+
 
 const GENDERS: Gender[] = ["MALE", "FEMALE", "N/A"]
 const ALLEGIANCES: Allegiance[] = ["FACE", "HEEL", "TWEENER"]
 const ROLES: Role[] = ["WRESTLER", "MANAGER", "REFEREE", "BOOKER", "CIVILIAN"]
-const STAT_KEYS = ["popularity", "strength", "skill", "agility", "stamina", "attitude"] as const
 const RELATIONS = [
   ["Manager", "managerId"], ["Partner", "partnerId"],
   ["Story Friend", "storyFriendId"], ["Story Enemy", "storyEnemyId"],
@@ -22,15 +23,14 @@ const RELATIONS = [
 ] as const
 
 // stats are strings in the form so they can be left blank; converted to numbers on submit
-type FormState = Omit<WrestlerCreate, typeof STAT_KEYS[number]> & {
-  popularity: string; strength: string; skill: string
-  agility: string; stamina: string; attitude: string
+type FormState = Omit<WrestlerCreate, "popularity"> & {
+  popularity: string
 }
 
 const INITIAL: FormState = {
   name: "", gender: "MALE", allegiance: "FACE", role: "WRESTLER",
   territoryId: 0, promotionId: 0, finisherName: "",
-  popularity: "", strength: "", skill: "", agility: "", stamina: "", attitude: "",
+  popularity: "",
   managerId: null, partnerId: null, storyFriendId: null,
   storyEnemyId: null, realFriendId: null, realEnemyId: null,
 }
@@ -44,13 +44,20 @@ export default function CreateWrestlerScreen() {
   const { data: promotions } = usePromotions()
   const { data: lookup } = useWrestlerLookup()
   const create = useCreateWrestler()
+  const { promotionId } = useManagedPromotion()
+  
+  useEffect(() => {
+    if (promotionId != null) {
+      setForm((f) => ({ ...f, promotionId }))
+    }
+  }, [promotionId])
 
   const set = <K extends keyof FormState>(key: K, value: FormState[K]) =>
     setForm((f) => ({ ...f, [key]: value }))
 
-  const setStat = (key: typeof STAT_KEYS[number], raw: string) => {
+  const setPopularity = (raw: string) => {
     const digitsOnly = raw.replace(/[^0-9]/g, "")
-    setForm((f) => ({ ...f, [key]: digitsOnly }))
+    setForm((f) => ({ ...f, popularity: digitsOnly }))
   }
 
   // show the picked wrestler's name, falling back to the id until the lookup loads
@@ -60,30 +67,21 @@ export default function CreateWrestlerScreen() {
   const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
 
   const submit = () => {
-    // text + selects
     if (form.name.trim() === "") return setError("Name is required.")
     if (form.finisherName.trim() === "") return setError("Finisher is required.")
     if (form.territoryId <= 0) return setError("Territory is required.")
-    if (form.promotionId <= 0) return setError("Promotion is required.")
+    if (promotionId == null) return setError("No promotion selected.")
+    if (form.popularity.trim() === "") return setError("Popularity is required.")
 
-    // each stat must be filled and within 50–100
-    for (const key of STAT_KEYS) {
-      const value = form[key]
-      if (value.trim() === "") return setError(`${capitalize(key)} is required.`)
-      const num = Number(value)
-      if (num < 50 || num > 100) return setError(`${capitalize(key)} must be between 50 and 100.`)
-    }
+    const pop = Number(form.popularity)
+    if (pop < 50 || pop > 100) return setError("Popularity must be between 50 and 100.")
 
     setError(null)
 
     const payload: WrestlerCreate = {
       ...form,
-      popularity: Number(form.popularity),
-      strength: Number(form.strength),
-      skill: Number(form.skill),
-      agility: Number(form.agility),
-      stamina: Number(form.stamina),
-      attitude: Number(form.attitude),
+      promotionId,
+      popularity: pop,
     }
 
     create.mutate(payload, {
@@ -149,20 +147,18 @@ export default function CreateWrestlerScreen() {
         />
       </View>
 
-      <Text style={styles.section}>STATS</Text>
-      {STAT_KEYS.map((key) => (
-        <View key={key} style={styles.stat_row}>
-          <Text style={styles.stat_label}>{capitalize(key)}</Text>
-          <TextInput
-            style={styles.stat_input}
-            keyboardType="numeric"
-            value={form[key]}
-            onChangeText={(t) => setStat(key, t)}
-            placeholder="50–100"
-            placeholderTextColor={colors.textMuted}
-          />
-        </View>
-      ))}
+      <Text style={styles.section}>POPULARITY</Text>
+      <View style={styles.stat_row}>
+        <Text style={styles.stat_label}>Popularity</Text>
+        <TextInput
+          style={styles.stat_input}
+          keyboardType="numeric"
+          value={form.popularity}
+          onChangeText={setPopularity}
+          placeholder="50–100"
+          placeholderTextColor={colors.textMuted}
+        />
+      </View>
 
       <Text style={styles.section}>RELATIONSHIPS</Text>
       {RELATIONS.map(([label, field]) => (

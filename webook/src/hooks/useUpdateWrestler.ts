@@ -8,7 +8,7 @@ export type WrestlerUpdate = Partial<
   Pick<Wrestler,
     | "name"
     | "gender" | "allegiance" | "role" | "territoryId" | "promotionId" | "finisherName"
-    | "popularity" | "strength" | "skill" | "agility" | "stamina" | "attitude"
+    | "popularity"
     | "managerId" | "partnerId" | "storyFriendId" | "storyEnemyId" | "realFriendId" | "realEnemyId"
   >
 >

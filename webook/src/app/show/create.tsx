@@ -60,6 +60,9 @@ export default function CreateShowScreen() {
         </TouchableOpacity>
       </View>
 
+      {error && <Text style={styles.error}>{error}</Text>}
+      {create.isError && <Text style={styles.error}>Couldn't create show.</Text>}
+
       <View style={styles.field}>
         <Text style={styles.label}>Name (optional)</Text>
         <TextInput
@@ -95,8 +98,6 @@ export default function CreateShowScreen() {
         />
       </View>
 
-      {error && <Text style={styles.error}>{error}</Text>}
-      {create.isError && <Text style={styles.error}>Couldn't create show.</Text>}
     </ScrollView>
   )
 }
@@ -114,5 +115,5 @@ const styles = StyleSheet.create({
     color: colors.text, fontFamily: fonts.regular, fontSize: 15, borderWidth: 1, borderColor: colors.border,
   },
   section: { fontFamily: fonts.heading, fontSize: 14, color: colors.textMuted, marginTop: 12, marginBottom: 14 },
-  error: { fontFamily: fonts.regular, fontSize: 13, color: colors.primary, marginTop: 16, textAlign: "center" },
+  error: { fontFamily: fonts.regular, fontSize: 13, color: colors.primary, textAlign: "center", marginBottom:16 },
 })
