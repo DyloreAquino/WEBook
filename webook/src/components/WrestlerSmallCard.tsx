@@ -64,7 +64,7 @@ const styles = StyleSheet.create({
   card_selected: { borderWidth: 2, borderColor: colors.accent },
   check: { position: "absolute", top: 6, right: 6 },
   card: {
-    width: 160,
+    width: 144,
     padding: 12,
     backgroundColor: colors.surface,
     borderRadius: 16,
