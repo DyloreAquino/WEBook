@@ -9,6 +9,9 @@ import { useShowsByMonth } from "@/hooks/useShowsByMonth"
 import { useShow } from "@/hooks/useShow"
 import ShowDetail from "@/components/ShowDetail"
 import { router } from "expo-router"
+import { useManagedPromotion } from "@/context/PromotionContext"
+import { usePromotions } from "@/hooks/usePromotions"
+import PromotionPickerModal from "@/components/PromotionPickerModal"
 
 const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"]
 const SHOW_ICON: Record<string, keyof typeof Ionicons.glyphMap> = {
@@ -24,6 +27,14 @@ export default function ShowsScreen() {
   const [month, setMonth] = useState<number | null>(null)
   const [selectedWeek, setSelectedWeek] = useState(1)
 
+  const { promotionId, setPromotionId, loading: promoLoading } = useManagedPromotion()
+  const { data: promotions } = usePromotions()
+  const [promoPickerOpen, setPromoPickerOpen] = useState(false)
+
+  const promotionName = promotions?.find((p) => p.id === promotionId)?.name ?? "Select promotion"
+
+  const mustPick = !promoLoading && promotionId == null
+
   useEffect(() => {
     if (year != null) return
     if (latest) { setYear(latest.year); setMonth(latest.month); setSelectedWeek(latest.week) }
@@ -31,7 +42,7 @@ export default function ShowsScreen() {
   }, [latest, latestLoading, year])
 
   const ready = year != null && month != null
-  const { data: monthShows } = useShowsByMonth(year ?? 0, month ?? 0, ready)
+  const { data: monthShows } = useShowsByMonth(year ?? 0, month ?? 0, promotionId, ready && promotionId != null)
 
   // slot shows into weeks 1-4
   const slots: (Show | null)[] = [null, null, null, null]
@@ -46,6 +57,12 @@ export default function ShowsScreen() {
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
+      {/* PROMOTION */}
+      <TouchableOpacity style={styles.promo_header} onPress={() => setPromoPickerOpen(true)} activeOpacity={0.7}>
+        <Text style={styles.promo_name}>{promotionName}</Text>
+        <Ionicons name="chevron-down" color={colors.textMuted} size={18} />
+      </TouchableOpacity>
+
       {/* year nav */}
       <View style={styles.year_nav}>
         <TouchableOpacity onPress={() => setYear((y) => (y ?? 0) - 1)} accessibilityLabel="Previous year">
@@ -113,6 +130,13 @@ export default function ShowsScreen() {
           </TouchableOpacity>
         </View>
       )}
+      <PromotionPickerModal
+        visible={promoPickerOpen || mustPick}
+        currentId={promotionId}
+        dismissable={!mustPick}   // can't dismiss the forced first-launch pick
+        onSelect={(id) => { setPromotionId(id); setPromoPickerOpen(false) }}
+        onClose={() => setPromoPickerOpen(false)}
+      />
     </ScrollView>
   )
 }
@@ -140,4 +164,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.accent, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 12,
   },
   book_text: { fontFamily: fonts.medium, fontSize: 14, color: colors.text },
+  promo_header: {
+    flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6,
+    marginBottom: 12,
+  },
+  promo_name: { fontFamily: fonts.heading, fontSize: 15, color: colors.accent },
 })

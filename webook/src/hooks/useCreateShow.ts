@@ -10,6 +10,7 @@ export type ShowCreate = {
   year: number
   month: number
   week: number
+  promotionId: number
 }
 
 export function useCreateShow() {

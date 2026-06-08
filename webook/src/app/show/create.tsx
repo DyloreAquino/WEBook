@@ -7,6 +7,7 @@ import { ShowType } from "@/types/show"
 import { useTerritories } from "@/hooks/useTerritories"
 import { useCreateShow, ShowCreate } from "@/hooks/useCreateShow"
 import SelectField from "@/components/SelectField"
+import { useManagedPromotion } from "@/context/PromotionContext"
 
 const SHOW_TYPES: ShowType[] = ["TV", "PPV", "SPECIAL"]  // verify your enum
 const MONTHS = Array.from({ length: 12 }, (_, i) => ({ value: i + 1, label: monthName(i + 1) }))
@@ -31,6 +32,7 @@ export default function CreateShowScreen() {
 
   const { data: territories } = useTerritories()
   const create = useCreateShow()
+  const { promotionId } = useManagedPromotion()
 
   const submit = () => {
     if (territoryId <= 0) return setError("Territory is required.")
@@ -38,8 +40,9 @@ export default function CreateShowScreen() {
     setError(null)
 
     const payload: ShowCreate = {
-      name: name.trim() === "" ? null : name.trim(),  // name optional
+      name: name.trim() === "" ? null : name.trim(),
       type, territoryId, year, month, week,
+      promotionId: promotionId!,   // from managed context
     }
     create.mutate(payload, {
       onSuccess: () => router.back(),  // return to calendar; it refetches via invalidate
