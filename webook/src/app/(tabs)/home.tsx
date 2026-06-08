@@ -1,6 +1,6 @@
 // app/(tabs)/index.tsx (or wherever home lives)
 import { useState } from "react"
-import { ScrollView, View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from "react-native"
+import { ScrollView, View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, RefreshControl } from "react-native"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { colors, fonts } from "@/styles/theme"
 import { useManagedPromotion } from "@/context/PromotionContext"
@@ -16,14 +16,23 @@ export default function HomeScreen() {
   const { promotionId, setPromotionId, loading: promoLoading } = useManagedPromotion()
   const { data: promotions } = usePromotions()
   const { data: latestShow } = useLatestShow()
-  const { data: championships, isLoading: champLoading } = useChampionshipsByPromotion(promotionId)
+  const { data: championships, isLoading: champLoading, refetch, isRefetching } = useChampionshipsByPromotion(promotionId)
   const [pickerOpen, setPickerOpen] = useState(false)
 
   const promotionName = promotions?.find((p) => p.id === promotionId)?.name ?? "Select promotion"
   const mustPick = !promoLoading && promotionId == null
 
   return (
-    <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
+    <ScrollView style={styles.screen} contentContainerStyle={styles.content}
+      refreshControl={
+        <RefreshControl
+          refreshing={isRefetching}
+          onRefresh={refetch}
+          tintColor={colors.accent}      // iOS spinner color
+          colors={[colors.accent]}       // Android spinner color
+        />
+      }
+    >
       {/* booker banner — promotion changer */}
       <Text style={styles.booker_label}>You are the booker of</Text>
       <TouchableOpacity style={styles.promo_row} onPress={() => setPickerOpen(true)} activeOpacity={0.7}>

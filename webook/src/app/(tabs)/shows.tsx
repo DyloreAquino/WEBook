@@ -1,6 +1,6 @@
 // app/(tabs)/shows.tsx  (or wherever your shows tab lives)
 import { useState, useEffect } from "react"
-import { ScrollView, View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from "react-native"
+import { ScrollView, View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, RefreshControl } from "react-native"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { colors, fonts } from "@/styles/theme"
 import { Show } from "@/types/show"
@@ -42,7 +42,7 @@ export default function ShowsScreen() {
   }, [latest, latestLoading, year])
 
   const ready = year != null && month != null
-  const { data: monthShows } = useShowsByMonth(year ?? 0, month ?? 0, promotionId, ready && promotionId != null)
+  const { data: monthShows, refetch, isRefetching } = useShowsByMonth(year ?? 0, month ?? 0, promotionId, ready && promotionId != null)
 
   // slot shows into weeks 1-4
   const slots: (Show | null)[] = [null, null, null, null]
@@ -56,7 +56,16 @@ export default function ShowsScreen() {
   }
 
   return (
-    <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
+    <ScrollView style={styles.screen} contentContainerStyle={styles.content}
+      refreshControl={
+          <RefreshControl
+            refreshing={isRefetching}
+            onRefresh={refetch}
+            tintColor={colors.accent}      // iOS spinner color
+            colors={[colors.accent]}       // Android spinner color
+          />
+        }
+    >
       {/* PROMOTION */}
       <TouchableOpacity style={styles.promo_header} onPress={() => setPromoPickerOpen(true)} activeOpacity={0.7}>
         <Text style={styles.promo_name}>{promotionName}</Text>

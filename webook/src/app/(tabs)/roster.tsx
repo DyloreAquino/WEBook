@@ -58,7 +58,7 @@ export default function RosterScreen() {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={styles.container} >
       <View style={styles.controls}>
         <View style={{ flex: 1 }}>
           <GroupByBar active={groupBy} onChange={setGroupBy} />
