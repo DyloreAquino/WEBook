@@ -1,9 +1,15 @@
 // components/WrestlerMultiPicker.tsx
-import { useState } from "react"
-import { Modal, View, Text, TextInput, FlatList, StyleSheet, TouchableOpacity } from "react-native"
+import { useState, useMemo } from "react"
+import { Modal, View, Text, TextInput, SectionList, StyleSheet, TouchableOpacity } from "react-native"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { colors, fonts } from "@/styles/theme"
+import { GroupCategory } from "@/types/wrestler"
 import { useWrestlerLookup } from "@/hooks/useWrestlerLookup"
+import { useTerritories } from "@/hooks/useTerritories"
+import { usePromotions } from "@/hooks/usePromotions"
+import { groupWrestlers } from "@/lib/groupWrestlers"
+import GroupByBar from "@/components/GroupByBar"
+import WrestlerSmallCard from "@/components/WrestlerSmallCard"
 
 type Props = {
   visible: boolean
@@ -14,12 +20,27 @@ type Props = {
 
 export default function WrestlerMultiPicker({ visible, selectedIds, onToggle, onClose }: Props) {
   const { data: lookup } = useWrestlerLookup()
+  const { data: territories } = useTerritories()
+  const { data: promotions } = usePromotions()
   const [search, setSearch] = useState("")
+  const [groupBy, setGroupBy] = useState<GroupCategory>("gender")
 
   const wrestlers = lookup ? Array.from(lookup.values()) : []
+
   const filtered = wrestlers.filter((w) =>
     w.name.toLowerCase().includes(search.trim().toLowerCase())
   )
+
+  const labelMaps = useMemo(() => ({
+    territoryId: Object.fromEntries((territories ?? []).map((t) => [String(t.id), t.name])),
+    promotionId: Object.fromEntries((promotions ?? []).map((p) => [String(p.id), p.name])),
+  }), [territories, promotions])
+
+  // group, then wrap each section's data into a single row-array (grid trick)
+  const sections = useMemo(() => {
+    const grouped = groupWrestlers(filtered, groupBy, labelMaps)
+    return grouped.map((s) => ({ title: s.title, data: [s.data] }))
+  }, [filtered, groupBy, labelMaps])
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
@@ -43,24 +64,30 @@ export default function WrestlerMultiPicker({ visible, selectedIds, onToggle, on
             autoCorrect={false}
           />
 
-          <FlatList
-            data={filtered}
-            keyExtractor={(w) => String(w.id)}
+          <GroupByBar active={groupBy} onChange={setGroupBy} />
+
+          <SectionList
+            sections={sections}
+            keyExtractor={(item, index) => `row-${index}`}
             keyboardShouldPersistTaps="handled"
             contentContainerStyle={styles.list}
-            renderItem={({ item }) => {
-              const selected = selectedIds.includes(item.id)
-              return (
-                <TouchableOpacity
-                  style={[styles.row, selected && styles.row_selected]}
-                  onPress={() => onToggle(item.id)}
-                  activeOpacity={0.7}
-                >
-                  <Text style={styles.name} numberOfLines={1}>{item.name}</Text>
-                  {selected && <Ionicons name="checkmark-circle" color={colors.accent} size={22} />}
-                </TouchableOpacity>
-              )
-            }}
+            stickySectionHeadersEnabled
+            renderItem={({ item }) => (
+              <View style={styles.grid}>
+                {item.map((w) => (
+                  <WrestlerSmallCard
+                    key={w.id}
+                    wrestler={w}
+                    selectable
+                    selected={selectedIds.includes(w.id)}
+                    onPress={() => onToggle(w.id)}
+                  />
+                ))}
+              </View>
+            )}
+            renderSectionHeader={({ section }) =>
+              section.title ? <Text style={styles.section_header}>{section.title.toUpperCase()}</Text> : null
+            }
           />
         </View>
       </View>
@@ -78,10 +105,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14, paddingVertical: 12, color: colors.text, fontFamily: fonts.regular, fontSize: 15,
   },
   list: { paddingHorizontal: 24, paddingBottom: 24 },
-  row: {
-    flexDirection: "row", alignItems: "center", justifyContent: "space-between",
-    paddingVertical: 14, paddingHorizontal: 4, borderBottomWidth: 1, borderBottomColor: colors.border,
+  grid: { flexDirection: "row", flexWrap: "wrap", gap: 12, marginBottom: 8 },
+  section_header: {
+    fontFamily: fonts.heading, fontSize: 13, color: colors.textMuted,
+    backgroundColor: colors.background, paddingVertical: 8,
   },
-  row_selected: {},
-  name: { fontFamily: fonts.regular, fontSize: 16, color: colors.text, flex: 1, marginRight: 8 },
 })

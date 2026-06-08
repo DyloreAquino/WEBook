@@ -5,6 +5,13 @@ import Ionicons from "@expo/vector-icons/Ionicons"
 import { ComponentProps } from "react"
 import { Wrestler } from "@/types/wrestler"
 
+type Props = {
+  wrestler: Wrestler
+  selectable?: boolean      // when true, acts as a toggle button instead of a link
+  selected?: boolean
+  onPress?: () => void      // override (selection toggle) when selectable
+}
+
 type IoniconName = ComponentProps<typeof Ionicons>["name"]
 
 const GENDER_ICON: Record<Wrestler["gender"], IoniconName> = {
@@ -26,14 +33,17 @@ function dot(bg: string, icon: IoniconName, key: string) {
   )
 }
 
-export default function WrestlerSmallCard({ wrestler }: { wrestler: Wrestler }) {
+export default function WrestlerSmallCard({ wrestler, selectable, selected, onPress }: Props) {
+  const handlePress = onPress ?? (() => router.push({ pathname: "/wrestler/[id]", params: { id: wrestler.id } }))
+
   return (
     <TouchableOpacity
-      style={styles.card}
+      style={[styles.card, selectable && selected && styles.card_selected]}
       activeOpacity={0.7}
+      onPress={handlePress}
       accessibilityRole="button"
-      accessibilityLabel={`View ${wrestler.name}`}
-      onPress={() => router.push({ pathname: "/wrestler/[id]", params: { id: wrestler.id } })}
+      accessibilityState={selectable ? { selected } : undefined}
+      accessibilityLabel={selectable ? `Select ${wrestler.name}` : `View ${wrestler.name}`}
     >
       <Text style={styles.name} numberOfLines={2}>{wrestler.name}</Text>
       <View style={styles.dots}>
@@ -41,13 +51,20 @@ export default function WrestlerSmallCard({ wrestler }: { wrestler: Wrestler }) 
         {dot(tagColors.allegiance[wrestler.allegiance] ?? "#3a3a3a", ALLEGIANCE_ICON[wrestler.allegiance] ?? "help", "a")}
         {dot(tagColors.role[wrestler.role] ?? "#3a3a3a", ROLE_ICON[wrestler.role] ?? "help", "r")}
       </View>
+      {selectable && selected && (
+        <View style={styles.check}>
+          <Ionicons name="checkmark-circle" color={colors.accent} size={20} />
+        </View>
+      )}
     </TouchableOpacity>
   )
 }
 
 const styles = StyleSheet.create({
+  card_selected: { borderWidth: 2, borderColor: colors.accent },
+  check: { position: "absolute", top: 6, right: 6 },
   card: {
-    width: 212,
+    width: 160,
     padding: 12,
     backgroundColor: colors.surface,
     borderRadius: 16,
