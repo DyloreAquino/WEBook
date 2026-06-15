@@ -21,12 +21,20 @@ const PLACEMENT_LABELS: Record<Placement, string> = {
 }
 
 export default function CreateEventScreen() {
-  const { showId } = useLocalSearchParams<{ showId: string }>()
+  // 1. Unpack the placement parameter passed from the previous screen
+  const { showId, placement: initialPlacement } = useLocalSearchParams<{ 
+    showId: string; 
+    placement?: Placement 
+  }>()
+  
   const showIdNum = Number(showId)
   const { data: show } = useShow(showIdNum)
 
   const [type, setType] = useState<EventType>("MATCH")
-  const [placement, setPlacement] = useState<Placement>("MID")
+  
+  // 2. Default to the passed placement parameter, fallback to "MID" if none exists
+  const [placement, setPlacement] = useState<Placement>(initialPlacement ?? "MID")
+  
   const [matchTypeId, setMatchTypeId] = useState<number | null>(null)
   const [championshipId, setChampionshipId] = useState<number | null>(null)
   const [wrestlerIds, setWrestlerIds] = useState<number[]>([])
@@ -41,8 +49,8 @@ export default function CreateEventScreen() {
   const create = useCreateEvent()
 
   const promotionChampionships = show
-  ? Array.from(championships?.values() ?? []).filter((c) => c.promotionId === show.promotionId)
-  : []
+    ? Array.from(championships?.values() ?? []).filter((c) => c.promotionId === show.promotionId)
+    : []
 
   const toggleWrestler = (id: number) =>
     setWrestlerIds((ids) => (ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id]))
@@ -56,7 +64,7 @@ export default function CreateEventScreen() {
 
     const payload: EventCreate = {
       type, placement, showId: showIdNum,
-      matchTypeId: type === "MATCH" ? matchTypeId : null,  // only matches have a match type
+      matchTypeId: type === "MATCH" ? matchTypeId : null,
       championshipId,
       wrestlerIds, stipulationIds,
     }
@@ -84,7 +92,6 @@ export default function CreateEventScreen() {
         options={PLACEMENTS.map((p) => ({ value: p, label: PLACEMENT_LABELS[p] }))}
         onChange={setPlacement} />
 
-      {/* match type only relevant for MATCH */}
       {type === "MATCH" && (
         <SelectField label="Match Type" value={matchTypeId ?? 0}
           options={[...(matchTypes ? Array.from(matchTypes, ([id, name]) => ({ value: id, label: name })) : [])]}
@@ -98,7 +105,6 @@ export default function CreateEventScreen() {
         ]}
         onChange={(v) => setChampionshipId(v || null)} />
 
-      {/* wrestlers */}
       <Text style={styles.section}>WRESTLERS</Text>
       <TouchableOpacity style={styles.add_btn} onPress={() => setPickerOpen(true)} activeOpacity={0.7}>
         <Ionicons name="add" color={colors.accent} size={18} />
@@ -113,7 +119,6 @@ export default function CreateEventScreen() {
         </View>
       )}
 
-      {/* stipulations */}
       <Text style={styles.section}>STIPULATIONS</Text>
       <View style={styles.chips}>
         {(stipulations ?? []).map((s) => {

@@ -1,6 +1,6 @@
 // components/ShowDetail.tsx
 import { useState, useEffect } from "react"
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, Alert, ActivityIndicator } from "react-native"
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, ActivityIndicator } from "react-native"
 import { router } from "expo-router"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { colors, fonts } from "@/styles/theme"
@@ -15,15 +15,22 @@ import SelectField from "@/components/SelectField"
 import ShowEventCard from "@/components/ShowEventCard"
 import ConfirmModal from "@/components/ConfirmModal"
 
-const SHOW_TYPES: ShowType[] = ["TV", "PPV", "SPECIAL"]  // verify your enum
+const SHOW_TYPES: ShowType[] = ["TV", "PPV", "SPECIAL"]
 
-// placement sections in card running order
 const PLACEMENT_ORDER: { key: Placement; label: string }[] = [
   { key: "MAIN", label: "Main Event" },
   { key: "SEMI", label: "Semi Main" },
   { key: "MID", label: "Mid Card" },
   { key: "UNDER", label: "Undercard" },
 ]
+
+// Determine max events per placement based on show type
+const getPlacementLimits = (type: ShowType) => {
+  if (type === "TV") {
+    return { MAIN: 1, SEMI: 0, MID: 2, UNDER: 3 }
+  }
+  return { MAIN: 1, SEMI: 2, MID: 3, UNDER: 4 }
+}
 
 export default function ShowDetail({ show, loading }: { show: Show; loading?: boolean }) {
   const [editing, setEditing] = useState(false)
@@ -52,17 +59,24 @@ export default function ShowDetail({ show, loading }: { show: Show; loading?: bo
 
   const territoryName = territories?.find((t) => t.id === show.territoryId)?.name ?? ""
 
-  // group events by placement
+  // Calculate limits and build sections based on current events
+  const limits = getPlacementLimits(show.type)
   const sections = PLACEMENT_ORDER
-    .map(({ key, label }) => ({
-      label,
-      data: (show.events ?? []).filter((e) => e.placement === key),
-    }))
-    .filter((s) => s.data.length > 0)
+    .map(({ key, label }) => {
+      const limit = limits[key as keyof typeof limits]
+      const data = (show.events ?? []).filter((e) => e.placement === key)
+      return {
+        key,
+        label,
+        limit,
+        count: data.length,
+        data,
+      }
+    })
+    .filter((s) => s.limit > 0) // Hide sections completely if limit is 0 (e.g., SEMI on TV)
 
   return (
     <View style={styles.card}>
-      {/* centered header — display or edit */}
       <View style={styles.header}>
         {editing ? (
           <View style={styles.edit_fields}>
@@ -89,7 +103,6 @@ export default function ShowDetail({ show, loading }: { show: Show; loading?: bo
         )}
       </View>
 
-      {/* actions */}
       <View style={styles.actions}>
         <TouchableOpacity style={styles.delete_btn} onPress={() => setConfirmOpen(true)} activeOpacity={0.7} accessibilityLabel="Delete show">
           <Ionicons name="trash" color={colors.primary} size={18} />
@@ -100,28 +113,19 @@ export default function ShowDetail({ show, loading }: { show: Show; loading?: bo
             : <Ionicons name={!editing ? "pencil" : hasChanges ? "checkmark" : "close"}
                 color={hasChanges ? colors.accent : colors.text} size={16} />}
         </TouchableOpacity>
-        {/* add event */}
-        <TouchableOpacity
-          style={styles.add_event}
-          onPress={() => router.push({ pathname: "/event/create", params: { showId: String(show.id) } })}
-          activeOpacity={0.7}
-        >
-          <Ionicons name="add" color={colors.accent} size={18} />
-          <Text style={styles.add_event_text}>Add Event</Text>
-        </TouchableOpacity>
       </View>
 
-
-      {/* events grouped by placement */}
       <View style={styles.events}>
         {loading ? (
           <ActivityIndicator color={colors.accent} style={{ marginVertical: 20 }} />
-        ) : sections.length === 0 ? (
-          <Text style={styles.no_events}>No events booked yet</Text>
         ) : (
           sections.map((section) => (
-            <View key={section.label}>
-              <Text style={styles.section_title}>{section.label.toUpperCase()}</Text>
+            <View key={section.key} style={styles.section_container}>
+              <View style={styles.section_header}>
+                <Text style={styles.section_title}>{section.label.toUpperCase()}</Text>
+                <Text style={styles.section_count}>{section.count} / {section.limit}</Text>
+              </View>
+
               {section.data.map((ev) => (
                 <ShowEventCard
                   key={ev.id}
@@ -131,10 +135,26 @@ export default function ShowDetail({ show, loading }: { show: Show; loading?: bo
                   show={show}
                 />
               ))}
+
+              {/* Only show Add button if we haven't reached the limit */}
+              {section.count < section.limit && (
+                <TouchableOpacity
+                  style={styles.add_section_event}
+                  onPress={() => router.push({ 
+                    pathname: "/event/create", 
+                    params: { showId: String(show.id), placement: section.key } 
+                  })}
+                  activeOpacity={0.7}
+                >
+                  <Ionicons name="add" color={colors.accent} size={16} />
+                  <Text style={styles.add_section_event_text}>Add {section.label}</Text>
+                </TouchableOpacity>
+              )}
             </View>
           ))
         )}
       </View>
+
       <ConfirmModal
         visible={confirmOpen}
         title="Delete show?"
@@ -162,24 +182,20 @@ const styles = StyleSheet.create({
   sub: { fontFamily: fonts.regular, fontSize: 13, color: colors.textMuted, marginTop: 4, marginBottom: 8 },
   type_tag: { backgroundColor: colors.accent, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 3 },
   type_text: { fontFamily: fonts.bold, fontSize: 11, color: colors.text },
-  actions: { flexDirection: "row", gap: 8, marginBottom: 12, justifyContent:'center' },
-  btn: {
-    flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6,
-    backgroundColor: colors.background, borderRadius: 10, paddingVertical: 12, borderWidth: 1, borderColor: colors.border,
-  },
-  btn_text: { fontFamily: fonts.medium, fontSize: 13, color: colors.text },
+  actions: { flexDirection: "row", gap: 8, marginBottom: 24, justifyContent:'center' },
   delete_btn: {
-    height:44,
-    width: 44, backgroundColor: colors.background, borderRadius: 10,
+    height: 44, width: 44, backgroundColor: colors.background, borderRadius: 10,
     alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: colors.border,
   },
-  add_event: {
-    flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6,
-    paddingVertical: 12, borderRadius: 10, borderWidth: 1, borderColor: colors.accent,
-    borderStyle: "dashed", marginBottom: 18, width:192
-  },
-  add_event_text: { fontFamily: fonts.medium, fontSize: 14, color: colors.accent },
   events: {},
-  section_title: { fontFamily: fonts.heading, fontSize: 13, color: colors.textMuted, marginBottom: 10, marginTop: 6 },
-  no_events: { fontFamily: fonts.regular, fontSize: 14, color: colors.textMuted, textAlign: "center", paddingVertical: 20 },
+  section_container: { marginBottom: 20 },
+  section_header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 10 },
+  section_title: { fontFamily: fonts.heading, fontSize: 13, color: colors.textMuted },
+  section_count: { fontFamily: fonts.medium, fontSize: 12, color: colors.textMuted },
+  add_section_event: {
+    flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6,
+    paddingVertical: 10, borderRadius: 10, borderWidth: 1, borderColor: colors.accent,
+    borderStyle: "dashed", marginTop: 4,
+  },
+  add_section_event_text: { fontFamily: fonts.medium, fontSize: 13, color: colors.accent },
 })
