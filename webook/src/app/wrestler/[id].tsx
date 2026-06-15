@@ -1,5 +1,5 @@
 import { useLocalSearchParams } from "expo-router"
-import { ScrollView, View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from "react-native"
+import { ScrollView, View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, RefreshControl } from "react-native"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { colors, fonts } from "@/styles/theme"
 import { useWrestler } from "@/hooks/useWrestler"
@@ -33,7 +33,7 @@ const ROLES: Role[] = ["WRESTLER", "MANAGER", "REFEREE", "BOOKER", "CIVILIAN"]
 export default function WrestlerDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
   const wrestlerId = Number(id)
-  const { data: w, isLoading, isError } = useWrestler(wrestlerId)
+  const { data: w, isLoading, isError, isRefetching, refetch } = useWrestler(wrestlerId)
   const { data: lookup } = useWrestlerLookup()
   const { data: territories } = useTerritories()
   const { data: promotions } = usePromotions()
@@ -97,7 +97,16 @@ export default function WrestlerDetailScreen() {
   const promotionName = promotions?.find((p) => p.id === w.promotionId)?.name ?? String(w.promotionId)
 
   return (
-    <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
+    <ScrollView style={styles.screen} contentContainerStyle={styles.content}
+      refreshControl={
+        <RefreshControl
+          refreshing={isRefetching}
+          onRefresh={refetch}
+          tintColor={colors.accent}      // iOS spinner color
+          colors={[colors.accent]}       // Android spinner color
+        />
+      }
+    >
       {/* header: name + edit + history buttons */}
       <View style={styles.header}>
         {editing ? (

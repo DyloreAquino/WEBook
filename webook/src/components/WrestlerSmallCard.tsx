@@ -10,6 +10,7 @@ type Props = {
   selectable?: boolean      // when true, acts as a toggle button instead of a link
   selected?: boolean
   onPress?: () => void      // override (selection toggle) when selectable
+  onLongPress?: () => void
 }
 
 type IoniconName = ComponentProps<typeof Ionicons>["name"]
@@ -33,14 +34,15 @@ function dot(bg: string, icon: IoniconName, key: string) {
   )
 }
 
-export default function WrestlerSmallCard({ wrestler, selectable, selected, onPress }: Props) {
+export default function WrestlerSmallCard({ wrestler, selectable, selected, onPress, onLongPress }: Props) {
   const handlePress = onPress ?? (() => router.push({ pathname: "/wrestler/[id]", params: { id: wrestler.id } }))
-
+  
   return (
     <TouchableOpacity
       style={[styles.card, selectable && selected && styles.card_selected]}
       activeOpacity={0.7}
       onPress={handlePress}
+      onLongPress={onLongPress}     // add
       accessibilityRole="button"
       accessibilityState={selectable ? { selected } : undefined}
       accessibilityLabel={selectable ? `Select ${wrestler.name}` : `View ${wrestler.name}`}

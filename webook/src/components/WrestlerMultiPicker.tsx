@@ -10,6 +10,7 @@ import { usePromotions } from "@/hooks/usePromotions"
 import { groupWrestlers } from "@/lib/groupWrestlers"
 import GroupByBar from "@/components/GroupByBar"
 import WrestlerSmallCard from "@/components/WrestlerSmallCard"
+import { router } from "expo-router"
 
 type Props = {
   visible: boolean
@@ -81,6 +82,7 @@ export default function WrestlerMultiPicker({ visible, selectedIds, onToggle, on
                     selectable
                     selected={selectedIds.includes(w.id)}
                     onPress={() => onToggle(w.id)}
+                    onLongPress={() => router.push({ pathname: "/wrestler/[id]", params: { id: w.id } })}
                   />
                 ))}
               </View>
