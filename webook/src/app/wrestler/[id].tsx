@@ -203,7 +203,18 @@ export default function WrestlerDetailScreen() {
             <WrestlerTag type="allegiance" value={w.allegiance} />
             <WrestlerTag type="role" value={w.role} />
           </View>
+          
           <View style={styles.info_block}>
+            {/* 1. Insert the Win/Loss Record row here */}
+            <InfoRow 
+              label="Record" 
+              value={`${w.wins}W — ${w.losses}L${
+                (w.wins + w.losses) > 0 
+                  ? ` (${Math.round((w.wins / (w.wins + w.losses)) * 100)}%)` 
+                  : ""
+              }`} 
+            />
+            
             <InfoRow label="Finisher" value={w.finisherName} />
             <InfoRow label="Territory" value={territoryName} />
             <InfoRow label="Promotion" value={promotionName} />

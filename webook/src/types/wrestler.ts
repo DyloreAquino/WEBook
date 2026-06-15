@@ -35,6 +35,8 @@ export type Wrestler = {
   teams?: Team[];
   isWinner?: number;
   finishType?: FinishType;
+  wins: number;
+  losses: number;
 };
 
 export type GroupCategory =
