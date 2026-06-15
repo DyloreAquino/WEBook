@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react"
-import { ScrollView, View, Text, TextInput, StyleSheet, TouchableOpacity, ActivityIndicator } from "react-native"
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, ActivityIndicator } from "react-native"
 import { router } from "expo-router"
 import Ionicons from "@expo/vector-icons/Ionicons"
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view" // 1. Correct package import
 import { colors, fonts } from "@/styles/theme"
 import { Gender, Allegiance, Role } from "@/types/wrestler"
 import { useTerritories } from "@/hooks/useTerritories"
@@ -12,7 +13,6 @@ import SelectField from "@/components/SelectField"
 import WrestlerPickerModal from "@/components/WrestlerPickerModal"
 import { useManagedPromotion } from "@/context/PromotionContext"
 
-
 const GENDERS: Gender[] = ["MALE", "FEMALE", "N/A"]
 const ALLEGIANCES: Allegiance[] = ["FACE", "HEEL", "TWEENER"]
 const ROLES: Role[] = ["WRESTLER", "MANAGER", "REFEREE", "BOOKER", "CIVILIAN"]
@@ -22,7 +22,6 @@ const RELATIONS = [
   ["Real Friend", "realFriendId"], ["Real Enemy", "realEnemyId"],
 ] as const
 
-// stats are strings in the form so they can be left blank; converted to numbers on submit
 type FormState = Omit<WrestlerCreate, "popularity"> & {
   popularity: string
 }
@@ -60,11 +59,8 @@ export default function CreateWrestlerScreen() {
     setForm((f) => ({ ...f, popularity: digitsOnly }))
   }
 
-  // show the picked wrestler's name, falling back to the id until the lookup loads
   const relationLabel = (id: number | null | undefined) =>
     id != null ? lookup?.get(id)?.name ?? `#${id}` : "None"
-
-  const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
 
   const submit = () => {
     if (form.name.trim() === "") return setError("Name is required.")
@@ -91,7 +87,14 @@ export default function CreateWrestlerScreen() {
   }
 
   return (
-    <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
+    // 2. Swapped layout wrapper here to provide the context needed for form scrolling
+    <KeyboardAwareScrollView
+      style={styles.screen}
+      contentContainerStyle={styles.content}
+      keyboardShouldPersistTaps="handled"
+      extraScrollHeight={20} 
+      enableOnAndroid={true} 
+    >
       <View style={styles.header}>
         <Text style={styles.title}>New Wrestler</Text>
         <TouchableOpacity
@@ -120,6 +123,20 @@ export default function CreateWrestlerScreen() {
         />
       </View>
 
+      <Text style={styles.section}>STATS</Text>
+      <View style={styles.stat_row}>
+        <Text style={styles.stat_label}>Popularity</Text>
+        <TextInput
+          style={styles.stat_input}
+          keyboardType="numeric"
+          value={form.popularity}
+          onChangeText={setPopularity}
+          placeholder="50–100"
+          placeholderTextColor={colors.textMuted}
+        />
+      </View>
+      
+      <Text style={styles.section}>INFO</Text>
       <SelectField label="Gender" value={form.gender}
         options={GENDERS.map((g) => ({ value: g, label: g }))}
         onChange={(v) => set("gender", v)} />
@@ -147,19 +164,6 @@ export default function CreateWrestlerScreen() {
         />
       </View>
 
-      <Text style={styles.section}>POPULARITY</Text>
-      <View style={styles.stat_row}>
-        <Text style={styles.stat_label}>Popularity</Text>
-        <TextInput
-          style={styles.stat_input}
-          keyboardType="numeric"
-          value={form.popularity}
-          onChangeText={setPopularity}
-          placeholder="50–100"
-          placeholderTextColor={colors.textMuted}
-        />
-      </View>
-
       <Text style={styles.section}>RELATIONSHIPS</Text>
       {RELATIONS.map(([label, field]) => (
         <TouchableOpacity key={field} style={styles.relation_row} onPress={() => setPickerField(field)} activeOpacity={0.7}>
@@ -180,7 +184,7 @@ export default function CreateWrestlerScreen() {
         }}
         onClose={() => setPickerField(null)}
       />
-    </ScrollView>
+    </KeyboardAwareScrollView> // 3. Correct closing wrapper tag
   )
 }
 

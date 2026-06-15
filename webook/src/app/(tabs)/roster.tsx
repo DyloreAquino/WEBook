@@ -14,6 +14,7 @@ import { useTerritories } from "@/hooks/useTerritories";
 import { usePromotions } from "@/hooks/usePromotions";
 import CreateButton from "@/components/CreateButton";
 import { Wrestler } from "@/types/wrestler"
+import { ScrollView } from "react-native";
 
 export default function RosterScreen() {
   // 1. Allow the state to accept "alphabetical" alongside your other GroupCategory values
@@ -83,10 +84,20 @@ export default function RosterScreen() {
 
   if (isError) {
     return (
-      <View style={[styles.container, styles.center]}>
+      <ScrollView style={[styles.container]}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefetching}
+            onRefresh={refetch}
+            tintColor={colors.accent}
+            colors={[colors.accent]}
+            progressBackgroundColor={colors.surface}
+          />
+        }
+      >
         <Text style={styles.error_text}>Couldn't load roster.</Text>
         <Text style={styles.error_detail}>{(error as Error).message}</Text>
-      </View>
+      </ScrollView>
     )
   }
 
