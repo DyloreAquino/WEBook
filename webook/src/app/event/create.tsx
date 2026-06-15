@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { ScrollView, View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from "react-native"
 import { router, useLocalSearchParams } from "expo-router"
 import Ionicons from "@expo/vector-icons/Ionicons"
@@ -47,6 +47,16 @@ export default function CreateEventScreen() {
   const { data: stipulations } = useStipulations()
   const { data: lookup } = useWrestlerLookup()
   const create = useCreateEvent()
+
+  // Example context within your Show / Event creation page
+  const wrestlersAlreadyOnShow = useMemo(() => {
+    if (!show?.events) return [];
+
+    // Maps each wrestler object to its ID, then flattens all events into one array
+    return show.events.flatMap(event => 
+      event.wrestlers?.map(w => w.id) || []
+    );
+  }, [show]);
 
   const promotionChampionships = show
     ? Array.from(championships?.values() ?? []).filter((c) => c.promotionId === show.promotionId)
@@ -139,6 +149,7 @@ export default function CreateEventScreen() {
       <WrestlerMultiPicker
         visible={pickerOpen}
         selectedIds={wrestlerIds}
+        alreadyBookedIds={wrestlersAlreadyOnShow}
         onToggle={toggleWrestler}
         onClose={() => setPickerOpen(false)}
       />

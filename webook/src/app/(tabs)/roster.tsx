@@ -13,27 +13,60 @@ import FilterModal from "@/components/FilterModal";
 import { useTerritories } from "@/hooks/useTerritories";
 import { usePromotions } from "@/hooks/usePromotions";
 import CreateButton from "@/components/CreateButton";
+import { Wrestler } from "@/types/wrestler"
 
-// TODO: Route wrestlers to detail screens
-// TODO: Route create button to actual create wrestler
 export default function RosterScreen() {
-  const [groupBy, setGroupBy] = useState<GroupCategory>("gender");
-  const [filters, setFilters] = useState<WrestlerFilters>({})
-  const [filterOpen, setFilterOpen] = useState(false)
-  const { data: wrestlers, isLoading, isError, error, refetch, isRefetching } = useWrestlers(filters)
-  const activeCount = countActiveFilters(filters)
-  const { data: territories } = useTerritories()
-  const { data: promotions } = usePromotions()
+  // 1. Allow the state to accept "alphabetical" alongside your other GroupCategory values
+  const [groupBy, setGroupBy] = useState<GroupCategory | "alphabetical">("gender");
+  const [filters, setFilters] = useState<WrestlerFilters>({});
+  const [filterOpen, setFilterOpen] = useState(false);
+  const { data: wrestlers, isLoading, isError, error, refetch, isRefetching } = useWrestlers(filters);
+  const activeCount = countActiveFilters(filters);
+  const { data: territories } = useTerritories();
+  const { data: promotions } = usePromotions();
 
   const labelMaps = useMemo(() => ({
     territoryId: Object.fromEntries((territories ?? []).map((t) => [String(t.id), t.name])),
     promotionId: Object.fromEntries((promotions ?? []).map((p) => [String(p.id), p.name])),
-  }), [territories, promotions])
+  }), [territories, promotions]);
 
-  const sections = useMemo(
-    () => groupWrestlers(wrestlers ?? [], groupBy, labelMaps),
-    [wrestlers, groupBy, labelMaps]
-  )
+  // 2. Intercept and build custom A-Z sections if "alphabetical" is chosen
+  const sections = useMemo(() => {
+    if (!wrestlers) return [];
+
+    if (groupBy === "alphabetical") {
+      // Sort all wrestlers alphabetically by name
+      const sortedWrestlers = [...wrestlers].sort((a, b) => 
+        (a.name || "").localeCompare(b.name || "")
+      );
+
+      // Group them by their first letter
+      const groups: Record<string, typeof wrestlers> = {};
+      
+      sortedWrestlers.forEach((wrestler) => {
+        const firstLetter = wrestler.name ? wrestler.name.charAt(0).toUpperCase() : "#";
+        const key = /[A-Z]/.test(firstLetter) ? firstLetter : "#";
+        
+        if (!groups[key]) groups[key] = [];
+        groups[key].push(wrestler);
+      });
+
+      // Format groups into standard section blocks sorted from A to Z
+      return Object.keys(groups)
+        .sort((a, b) => {
+          if (a === "#") return 1; // Put symbols/numbers at the end
+          if (b === "#") return -1;
+          return a.localeCompare(b);
+        })
+        .map((letter) => ({
+          title: letter,
+          data: groups[letter],
+        }));
+    }
+
+    // Fall back to your original grouping utility for everything else
+    return groupWrestlers(wrestlers, groupBy as GroupCategory, labelMaps);
+  }, [wrestlers, groupBy, labelMaps]);
   
   const gridSections = useMemo(
     () => sections.map((s) => ({ title: s.title, data: [s.data] })),
@@ -61,7 +94,8 @@ export default function RosterScreen() {
     <View style={styles.container} >
       <View style={styles.controls}>
         <View style={{ flex: 1 }}>
-          <GroupByBar active={groupBy} onChange={setGroupBy} />
+          {/* Note: Pass active and onChange normally. Ensure GroupByBar can handle "alphabetical" layout-wise */}
+          <GroupByBar active={groupBy as any} onChange={setGroupBy as any} />
         </View>
         <TouchableOpacity
           style={styles.filter_button}
@@ -80,7 +114,7 @@ export default function RosterScreen() {
         keyExtractor={(item, index) => `row-${item[0]?.id ?? index}`}
         renderItem={({ item }) => (
           <View style={styles.grid}>
-            {item.map((wrestler) => (
+            {item.map((wrestler: Wrestler) => (
               <WrestlerCard key={wrestler.id} wrestler={wrestler} />
             ))}
           </View>
@@ -96,9 +130,9 @@ export default function RosterScreen() {
           <RefreshControl
             refreshing={isRefetching}
             onRefresh={refetch}
-            tintColor={colors.accent}      // iOS spinner color
-            colors={[colors.accent]}        // Android spinner color(s)
-            progressBackgroundColor={colors.surface}  // Android spinner bg
+            tintColor={colors.accent}
+            colors={[colors.accent]}
+            progressBackgroundColor={colors.surface}
           />
         }
       />
@@ -114,54 +148,23 @@ export default function RosterScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  center: {
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  grid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 12,
-    paddingHorizontal: 16,
-  },
-  list_content: {
-    paddingVertical: 12,
-  },
+  container: { flex: 1, backgroundColor: colors.background },
+  center: { justifyContent: "center", alignItems: "center" },
+  grid: { flexDirection: "row", flexWrap: "wrap", gap: 12, paddingHorizontal: 16 },
+  list_content: { paddingVertical: 12 },
   section_header: {
-    fontFamily: fonts.heading,
-    fontSize: 14,
-    color: colors.textMuted,
-    backgroundColor: colors.background,
-    paddingHorizontal: 24,
-    paddingVertical: 8,
+    fontFamily: fonts.heading, fontSize: 14, color: colors.textMuted,
+    backgroundColor: colors.background, paddingHorizontal: 24, paddingVertical: 8,
   },
-  error_text: {
-    fontFamily: fonts.bold,
-    fontSize: 18,
-    color: colors.text,
-  },
+  error_text: { fontFamily: fonts.bold, fontSize: 18, color: colors.text },
   error_detail: {
-    fontFamily: fonts.regular,
-    fontSize: 13,
-    color: colors.textMuted,
-    marginTop: 6,
-    paddingHorizontal: 24,
-    textAlign: "center",
+    fontFamily: fonts.regular, fontSize: 13, color: colors.textMuted,
+    marginTop: 6, paddingHorizontal: 24, textAlign: "center",
   },
-  controls: { 
-    flexDirection: "row", 
-    alignItems: "center",
-    borderBottomWidth: 1,
-    borderColor: colors.surface
-  },
+  controls: { flexDirection: "row", alignItems: "center", borderBottomWidth: 1, borderColor: colors.surface },
   filter_button: {
     paddingHorizontal: 14, paddingVertical: 8, marginRight: 16,
-    borderRadius: 999, backgroundColor: colors.surface,
-    borderWidth: 1, borderColor: colors.border,
+    borderRadius: 999, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border,
   },
   filter_button_text: { fontFamily: fonts.medium, fontSize: 13, color: colors.text },
 })

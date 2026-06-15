@@ -44,3 +44,4 @@ export type GroupCategory =
   | "role"
   | "territoryId"
   | "promotionId"
+  | "alphabetical"

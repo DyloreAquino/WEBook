@@ -10,6 +10,7 @@ const CATEGORIES: { key: GroupCategory; label: string }[] = [
   { key: "role", label: "Role" },
   { key: "territoryId", label: "Territory" },
   { key: "promotionId", label: "Promotion" },
+  { key: "alphabetical", label: "A -> Z"}
 ]
 
 type GroupByBarProps = {
