@@ -44,19 +44,17 @@ export default function WrestlerDetailScreen() {
   const update = useUpdateWrestler(wrestlerId)
   const [historyOpen, setHistoryOpen] = useState(false)
 
-
-  // which fields are editable — compare draft against the loaded wrestler
   const EDITABLE_KEYS = [
     "name",
     "gender", "allegiance", "role", "territoryId", "promotionId", "finisherName",
-    "popularity",
+    "popularity", "injured",
     "managerId", "partnerId", "storyFriendId", "storyEnemyId", "realFriendId", "realEnemyId",
   ] as const
 
   const hasChanges =
-  editing && w
-    ? EDITABLE_KEYS.some((k) => draft[k] !== undefined && draft[k] !== w[k])
-    : false
+    editing && w
+      ? EDITABLE_KEYS.some((k) => draft[k] !== undefined && draft[k] !== w[k])
+      : false
 
   useEffect(() => {
     if (editing && w) {
@@ -65,6 +63,7 @@ export default function WrestlerDetailScreen() {
         gender: w.gender, allegiance: w.allegiance, role: w.role,
         territoryId: w.territoryId, promotionId: w.promotionId, finisherName: w.finisherName,
         popularity: w.popularity,
+        injured: !!w.injured, // Force strict boolean state mapping
         managerId: w.managerId, partnerId: w.partnerId,
         storyFriendId: w.storyFriendId, storyEnemyId: w.storyEnemyId,
         realFriendId: w.realFriendId, realEnemyId: w.realEnemyId,
@@ -85,7 +84,6 @@ export default function WrestlerDetailScreen() {
     setDraft((d) => ({ ...d, popularity: v }))
   }
 
-
   if (isLoading) {
     return <View style={[styles.screen, styles.center]}><ActivityIndicator color={colors.accent} size="large" /></View>
   }
@@ -97,17 +95,18 @@ export default function WrestlerDetailScreen() {
   const promotionName = promotions?.find((p) => p.id === w.promotionId)?.name ?? String(w.promotionId)
 
   return (
-    <ScrollView style={styles.screen} contentContainerStyle={styles.content}
+    <ScrollView 
+      style={styles.screen} 
+      contentContainerStyle={styles.content}
       refreshControl={
         <RefreshControl
           refreshing={isRefetching}
           onRefresh={refetch}
-          tintColor={colors.accent}      // iOS spinner color
-          colors={[colors.accent]}       // Android spinner color
+          tintColor={colors.accent}
+          colors={[colors.accent]}
         />
       }
     >
-      {/* header: name + edit + history buttons */}
       <View style={styles.header}>
         {editing ? (
           <TextInput
@@ -132,9 +131,9 @@ export default function WrestlerDetailScreen() {
               if (!editing) {
                 setEditing(true)
               } else if (hasChanges) {
-                applyEdits()        // commit + exits on success
+                applyEdits()
               } else {
-                setEditing(false)   // nothing changed, just leave edit mode
+                setEditing(false)
               }
             }}
           >
@@ -156,9 +155,40 @@ export default function WrestlerDetailScreen() {
 
       {editing ? (
         <>
-          {update.isError && <Text style={styles.edit_error}>Couldn't save changes.</Text>}
+          {update.isError ? <Text style={styles.edit_error}>Couldn't save changes.</Text> : null}
 
           <View style={styles.edit_block}>
+            <View style={styles.stat_edit_row}>
+              <Text style={styles.stat_edit_label}>Popularity</Text>
+              <TextInput
+                style={styles.stat_edit_input}
+                keyboardType="numeric"
+                value={draft.popularity?.toString() ?? ""}
+                onChangeText={setPopularity}
+                placeholder="50–100"
+                placeholderTextColor={colors.textMuted}
+              />
+            </View>
+
+            {(() => {
+              // Strict boolean resolution to prevent numeric 0 evaluations from breaking render trees
+              const isInjured = !!(draft.injured !== undefined ? draft.injured : w.injured);
+              return (
+                <TouchableOpacity
+                  style={styles.checkbox_container}
+                  activeOpacity={0.7}
+                  onPress={() => setDraft((d) => ({ ...d, injured: !isInjured }))}
+                >
+                  <Text style={styles.checkbox_label}>Mark as Injured</Text>
+                  <View style={[styles.checkbox_box, isInjured ? styles.checkbox_box_checked : null]}>
+                    {isInjured ? (
+                      <Ionicons name="checkmark" size={14} color={colors.background} />
+                    ) : null}
+                  </View>
+                </TouchableOpacity>
+              );
+            })()}
+
             <SelectField
               label="Gender" value={draft.gender ?? w.gender}
               options={GENDERS.map((g) => ({ value: g, label: g }))}
@@ -203,9 +233,15 @@ export default function WrestlerDetailScreen() {
             <WrestlerTag type="allegiance" value={w.allegiance} />
             <WrestlerTag type="role" value={w.role} />
           </View>
+
+          <StatBar label="Popularity" value={w.popularity} />
           
           <View style={styles.info_block}>
-            {/* 1. Insert the Win/Loss Record row here */}
+            <InfoRow 
+              label="Health Status" 
+              value={w.injured ? "INJURED" : "Healthy"} 
+              valueColor={w.injured ? colors.primary : colors.text}
+            />
             <InfoRow 
               label="Record" 
               value={`${w.wins}W — ${w.losses}L${
@@ -220,22 +256,6 @@ export default function WrestlerDetailScreen() {
             <InfoRow label="Promotion" value={promotionName} />
           </View>
         </>
-      )}
-
-      {editing ? (
-        <View style={styles.stat_edit_row}>
-          <Text style={styles.stat_edit_label}>Popularity</Text>
-          <TextInput
-            style={styles.stat_edit_input}
-            keyboardType="numeric"
-            value={draft.popularity?.toString() ?? ""}
-            onChangeText={setPopularity}
-            placeholder="50–100"
-            placeholderTextColor={colors.textMuted}
-          />
-        </View>
-      ) : (
-        <StatBar label="Popularity" value={w.popularity} />
       )}
 
       <Text style={styles.section_title}>RELATIONSHIPS</Text>
@@ -284,18 +304,20 @@ export default function WrestlerDetailScreen() {
   )
 }
 
-function InfoRow({ label, value }: { label: string; value: string }) {
+function InfoRow({ label, value, valueColor }: { label: string; value: string; valueColor?: string }) {
   return (
     <View style={styles.info_row}>
       <Text style={styles.info_label}>{label}</Text>
-      <Text style={styles.info_value}>{value}</Text>
+      <Text style={[styles.info_value, valueColor ? { color: valueColor } : null]}>
+        {value}
+      </Text>
     </View>
   )
 }
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },
-  content: { padding: 24, paddingTop: 8 },  // top margin to breathe
+  content: { padding: 24, paddingTop: 8 },
   center: { justifyContent: "center", alignItems: "center" },
   errorText: { fontFamily: fonts.bold, fontSize: 16, color: colors.text },
   header: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 16 },
@@ -309,7 +331,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     borderRadius: 8,
     paddingHorizontal: 10,
-    height: 56,        // fixed single-line height for the 32px font
+    height: 56,
     width: 56
   },
   header_buttons: { flexDirection: "row", gap: 8, paddingTop: 4 },
@@ -351,4 +373,34 @@ const styles = StyleSheet.create({
   relation_edit_label: { fontFamily: fonts.regular, fontSize: 15, color: colors.textMuted },
   relation_edit_value: { flexDirection: "row", alignItems: "center", gap: 6 },
   relation_edit_name: { fontFamily: fonts.medium, fontSize: 15, color: colors.text },
+  checkbox_container: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: colors.surface,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 14,
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  checkbox_label: {
+    fontFamily: fonts.regular,
+    fontSize: 15,
+    color: colors.text,
+  },
+  checkbox_box: {
+    width: 22,
+    height: 22,
+    borderRadius: 6,
+    borderWidth: 2,
+    borderColor: colors.textMuted,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  checkbox_box_checked: {
+    backgroundColor: colors.accent,
+    borderColor: colors.accent,
+  },
 })

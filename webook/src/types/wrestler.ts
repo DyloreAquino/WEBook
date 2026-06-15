@@ -37,6 +37,7 @@ export type Wrestler = {
   finishType?: FinishType;
   wins: number;
   losses: number;
+  injured: boolean;
 };
 
 export type GroupCategory =
