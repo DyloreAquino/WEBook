@@ -162,7 +162,7 @@ export default function ShowDetail({ show, loading }: { show: Show; loading?: bo
         confirmLabel="Delete"
         destructive
         loading={del.isPending}
-        onConfirm={() => del.mutate(show.id, { onSuccess: () => { setConfirmOpen(false); router.back() } })}
+        onConfirm={() => del.mutate(show.id, { onSuccess: () => { setConfirmOpen(false); } })}
         onCancel={() => setConfirmOpen(false)}
       />
     </View>
