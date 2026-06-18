@@ -7,13 +7,13 @@ import { FinishType } from "@/types/event"
 import { useEvent } from "@/hooks/useEvent"
 import { useSimulateEvent, SimulateResult } from "@/hooks/useSimulateEvent"
 import SelectField from "@/components/SelectField"
+import StarRating from "@/components/StarRating"
 
 const FINISH_TYPES: FinishType[] = [
   "UNFINISHED", "PIN", "SUBMISSION", "DISQUALIFICATION",
   "COUNTOUT", "TIMEOUT", "ELIMINATION", "SPECIAL",
 ]
 
-// per-wrestler editable result in the form
 type ResultDraft = { isWinner: boolean; finishType: FinishType }
 
 export default function SimulateEventScreen() {
@@ -23,12 +23,14 @@ export default function SimulateEventScreen() {
   const simulate = useSimulateEvent(eventId, event?.showId ?? 0)
 
   const [notes, setNotes] = useState("")
-  // map of wrestlerId -> result draft
+  const [rating, setRating] = useState<number | null>(null)
   const [results, setResults] = useState<Record<number, ResultDraft>>({})
   const [error, setError] = useState<string | null>(null)
 
-  // seed results from the event's wrestlers (default: not winner, UNFINISHED)
   useEffect(() => {
+    if (event) {
+      setRating(event.rating ?? null)
+    }
     if (event?.wrestlers) {
       setResults((prev) => {
         const next: Record<number, ResultDraft> = {}
@@ -54,7 +56,6 @@ export default function SimulateEventScreen() {
 
   const submit = () => {
     const wrestlers = event.wrestlers ?? []
-    // every wrestler needs a result (backend requires isWinner + finishType for all)
     const payload: SimulateResult[] = wrestlers.map((w) => ({
       wrestlerId: w.id,
       isWinner: results[w.id]?.isWinner ?? false,
@@ -63,7 +64,7 @@ export default function SimulateEventScreen() {
     if (payload.length === 0) return setError("This event has no wrestlers to simulate.")
     setError(null)
     simulate.mutate(
-      { results: payload, notes: notes.trim() || undefined },
+      { results: payload, notes: notes.trim() || undefined, rating },
       { onSuccess: () => router.back() }
     )
   }
@@ -81,6 +82,12 @@ export default function SimulateEventScreen() {
 
       {error && <Text style={styles.error}>{error}</Text>}
       {simulate.isError && <Text style={styles.error}>Couldn't run simulation.</Text>}
+
+      {/* interactive rating picker */}
+      <View style={styles.field}>
+        <Text style={styles.label}>Match Rating</Text>
+        <StarRating rating={rating} interactive onChange={setRating} />
+      </View>
 
       {/* notes */}
       <View style={styles.field}>
@@ -136,22 +143,12 @@ const styles = StyleSheet.create({
   save: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.accent, alignItems: "center", justifyContent: "center" },
   field: { marginBottom: 14 },
   label: { fontFamily: fonts.regular, fontSize: 13, color: colors.textMuted, marginBottom: 6 },
-  notes_input: {
-    backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12,
-    color: colors.text, fontFamily: fonts.regular, fontSize: 15, borderWidth: 1, borderColor: colors.border,
-    minHeight: 100,
-  },
+  notes_input: { backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, color: colors.text, fontFamily: fonts.regular, fontSize: 15, borderWidth: 1, borderColor: colors.border, minHeight: 100 },
   section: { fontFamily: fonts.heading, fontSize: 14, color: colors.textMuted, marginTop: 12, marginBottom: 14 },
-  wrestler_block: {
-    backgroundColor: colors.surface, borderRadius: 14, padding: 14, marginBottom: 12,
-    borderWidth: 1, borderColor: colors.border,
-  },
+  wrestler_block: { backgroundColor: colors.surface, borderRadius: 14, padding: 14, marginBottom: 12, borderWidth: 1, borderColor: colors.border },
   winner_row: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 10 },
   w_name: { fontFamily: fonts.bold, fontSize: 16, color: colors.text, flex: 1, marginRight: 8 },
-  check: {
-    width: 28, height: 28, borderRadius: 8, borderWidth: 1, borderColor: colors.border,
-    alignItems: "center", justifyContent: "center", backgroundColor: colors.background,
-  },
+  check: { width: 28, height: 28, borderRadius: 8, borderWidth: 1, borderColor: colors.border, alignItems: "center", justifyContent: "center", backgroundColor: colors.background },
   check_on: { backgroundColor: colors.accent, borderColor: colors.accent },
   error: { fontFamily: fonts.regular, fontSize: 13, color: colors.primary, marginTop: 16, textAlign: "center" },
 })

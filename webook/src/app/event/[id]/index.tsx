@@ -17,6 +17,7 @@ import EventTag from "@/components/EventTag"
 import WrestlerCard from "@/components/WrestlerCard"
 import WrestlerMultiPicker from "@/components/WrestlerMultiPicker"
 import ConfirmModal from "@/components/ConfirmModal"
+import StarRating from "@/components/StarRating"
 import { TYPE_TAG, PLACEMENT_TAG } from "@/lib/eventTags"
 
 const EVENT_TYPES: EventType[] = ["MATCH", "PROMO", "SEGMENT", "BRAWL"]
@@ -49,9 +50,10 @@ export default function EventDetailScreen() {
       setDraft({
         type: event.type, placement: event.placement,
         matchTypeId: event.matchTypeId, championshipId: event.championshipId,
-        notes: event.notes,                                    // add
+        notes: event.notes,
         wrestlerIds: (event.wrestlers ?? []).map((w) => w.id),
         stipulationIds: (event.stipulations ?? []).map((s) => s.id),
+        rating: event.rating ?? null,
       })
     }
   }, [editing, event])
@@ -126,6 +128,13 @@ export default function EventDetailScreen() {
             options={[{ value: 0, label: "None" }, ...promotionChampionships.map((c) => ({ value: c.id, label: c.name }))]}
             onChange={(v) => setDraft((d) => ({ ...d, championshipId: v || null }))} />
 
+          <Text style={styles.section}>MATCH RATING</Text>
+          <StarRating 
+            rating={draft.rating !== undefined ? draft.rating : (event.rating ?? null)} 
+            interactive 
+            onChange={(r) => setDraft((d) => ({ ...d, rating: r }))} 
+          />
+
           <Text style={styles.section}>NOTES</Text>
           <TextInput
             style={styles.notes_input}
@@ -166,6 +175,10 @@ export default function EventDetailScreen() {
           </View>
           {championshipName ? <Text style={styles.meta}>{championshipName}</Text> : null}
 
+          <View style={styles.rating_display_box}>
+            <StarRating rating={event.rating ?? null} />
+          </View>
+
           {event.notes ? (
             <>
               <View style={styles.notes_box}>
@@ -180,7 +193,6 @@ export default function EventDetailScreen() {
               <WrestlerCard key={w.id} wrestler={w} isWinner={Boolean(w.isWinner)} finishType={w.finishType ?? null} />
             ))}
           </View>
-          
         </>
       )}
 
@@ -205,19 +217,9 @@ export default function EventDetailScreen() {
 }
 
 const styles = StyleSheet.create({
-  notes_box: {
-    padding: 8,
-    borderBottomWidth:1,
-    borderColor:colors.surface,
-    marginTop:8
-  },
-  notes_text: {
-    fontFamily: fonts.regular,
-    fontSize: 14,
-    color: colors.text,
-    lineHeight: 21,
-  },
-  wrestler_list: {gap:12},
+  notes_box: { padding: 8, borderBottomWidth:1, borderColor:colors.surface, marginTop:8 },
+  notes_text: { fontFamily: fonts.regular, fontSize: 14, color: colors.text, lineHeight: 21 },
+  wrestler_list: { gap:12 },
   screen: { flex: 1, backgroundColor: colors.background },
   content: { padding: 24, paddingBottom: 60 },
   center: { justifyContent: "center", alignItems: "center" },
@@ -237,16 +239,6 @@ const styles = StyleSheet.create({
   chip_active: { backgroundColor: colors.accent, borderColor: colors.accent },
   chip_text: { fontFamily: fonts.medium, fontSize: 14, color: colors.textMuted },
   chip_text_active: { color: colors.text },
-  notes_input: {
-    backgroundColor: colors.surface,
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    color: colors.text,
-    fontFamily: fonts.regular,
-    fontSize: 15,
-    borderWidth: 1,
-    borderColor: colors.border,
-    minHeight: 100,
-  },
+  notes_input: { backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, color: colors.text, fontFamily: fonts.regular, fontSize: 15, borderWidth: 1, borderColor: colors.border, minHeight: 100 },
+  rating_display_box: { marginBottom: 10, marginTop: 4 },
 })

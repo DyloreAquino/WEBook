@@ -19,6 +19,7 @@ export type WrestlerCreate = {
   storyEnemyId?: number | null
   realFriendId?: number | null
   realEnemyId?: number | null
+  injured?: boolean
 }
 
 export function useCreateWrestler() {

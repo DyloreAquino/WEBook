@@ -9,6 +9,7 @@ export type EventCreate = {
   matchTypeId: number | null
   championshipId: number | null
   showId: number
+  rating: number | null
   wrestlerIds: number[]
   stipulationIds: number[]
 }
@@ -24,6 +25,7 @@ export function useCreateEvent() {
         matchTypeId: input.matchTypeId,
         championshipId: input.championshipId,
         showId: input.showId,
+        rating: input.rating
       })
       const event = res.data.data
 

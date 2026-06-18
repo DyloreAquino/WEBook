@@ -11,6 +11,7 @@ export type SimulateResult = {
 
 export type SimulatePayload = {
   results: SimulateResult[]
+  rating: number | null
   notes?: string   // backend column pending — add server-side before relying on this
 }
 

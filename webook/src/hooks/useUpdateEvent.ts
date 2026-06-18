@@ -9,6 +9,7 @@ export type EventUpdate = {
   matchTypeId?: number | null
   championshipId?: number | null
   notes?: string | null
+  rating?: number | null
   wrestlerIds?: number[]      // if present, re-assigns via PUT
   stipulationIds?: number[]   // if present, re-assigns via PUT
 }
@@ -24,6 +25,7 @@ export function useUpdateEvent(id: number, showId: number) {
       if (input.matchTypeId !== undefined) base.matchTypeId = input.matchTypeId
       if (input.championshipId !== undefined) base.championshipId = input.championshipId
       if (input.notes !== undefined) base.notes = input.notes
+      if (input.rating !== undefined) base.rating = input.rating
       if (Object.keys(base).length > 0) {
         await api.patch(`/events/${id}`, base)
       }

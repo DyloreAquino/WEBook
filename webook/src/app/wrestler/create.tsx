@@ -29,7 +29,7 @@ type FormState = Omit<WrestlerCreate, "popularity"> & {
 const INITIAL: FormState = {
   name: "", gender: "MALE", allegiance: "FACE", role: "WRESTLER",
   territoryId: 0, promotionId: 0, finisherName: "",
-  popularity: "",
+  popularity: "", injured: false,
   managerId: null, partnerId: null, storyFriendId: null,
   storyEnemyId: null, realFriendId: null, realEnemyId: null,
 }

@@ -12,6 +12,7 @@ import { useCreateEvent, EventCreate } from "@/hooks/useCreateEvent"
 import SelectField from "@/components/SelectField"
 import WrestlerMultiPicker from "@/components/WrestlerMultiPicker"
 import WrestlerSmallCard from "@/components/WrestlerSmallCard"
+import StarRating from "@/components/StarRating"
 import { useShow } from "@/hooks/useShow"
 
 const EVENT_TYPES: EventType[] = ["MATCH", "PROMO", "SEGMENT", "BRAWL"]
@@ -21,7 +22,6 @@ const PLACEMENT_LABELS: Record<Placement, string> = {
 }
 
 export default function CreateEventScreen() {
-  // 1. Unpack the placement parameter passed from the previous screen
   const { showId, placement: initialPlacement } = useLocalSearchParams<{ 
     showId: string; 
     placement?: Placement 
@@ -31,12 +31,10 @@ export default function CreateEventScreen() {
   const { data: show } = useShow(showIdNum)
 
   const [type, setType] = useState<EventType>("MATCH")
-  
-  // 2. Default to the passed placement parameter, fallback to "MID" if none exists
   const [placement, setPlacement] = useState<Placement>(initialPlacement ?? "MID")
-  
   const [matchTypeId, setMatchTypeId] = useState<number | null>(null)
   const [championshipId, setChampionshipId] = useState<number | null>(null)
+  const [rating, setRating] = useState<number | null>(null)
   const [wrestlerIds, setWrestlerIds] = useState<number[]>([])
   const [stipulationIds, setStipulationIds] = useState<number[]>([])
   const [pickerOpen, setPickerOpen] = useState(false)
@@ -48,11 +46,8 @@ export default function CreateEventScreen() {
   const { data: lookup } = useWrestlerLookup()
   const create = useCreateEvent()
 
-  // Example context within your Show / Event creation page
   const wrestlersAlreadyOnShow = useMemo(() => {
     if (!show?.events) return [];
-
-    // Maps each wrestler object to its ID, then flattens all events into one array
     return show.events.flatMap(event => 
       event.wrestlers?.map(w => w.id) || []
     );
@@ -77,6 +72,7 @@ export default function CreateEventScreen() {
       matchTypeId: type === "MATCH" ? matchTypeId : null,
       championshipId,
       wrestlerIds, stipulationIds,
+      rating,
     }
     create.mutate(payload, { onSuccess: () => router.back() })
   }
@@ -114,6 +110,9 @@ export default function CreateEventScreen() {
           ...promotionChampionships.map((c) => ({ value: c.id, label: c.name })),
         ]}
         onChange={(v) => setChampionshipId(v || null)} />
+
+      <Text style={styles.section}>MATCH RATING (OPTIONAL)</Text>
+      <StarRating rating={rating} interactive onChange={setRating} />
 
       <Text style={styles.section}>WRESTLERS</Text>
       <TouchableOpacity style={styles.add_btn} onPress={() => setPickerOpen(true)} activeOpacity={0.7}>
@@ -164,17 +163,11 @@ const styles = StyleSheet.create({
   title: { fontFamily: fonts.bold, fontSize: 28, color: colors.text },
   save: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.surface, alignItems: "center", justifyContent: "center" },
   section: { fontFamily: fonts.heading, fontSize: 14, color: colors.textMuted, marginTop: 12, marginBottom: 14 },
-  add_btn: {
-    flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6,
-    paddingVertical: 12, borderRadius: 10, borderWidth: 1, borderColor: colors.accent, borderStyle: "dashed",
-  },
+  add_btn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, paddingVertical: 12, borderRadius: 10, borderWidth: 1, borderColor: colors.accent, borderStyle: "dashed" },
   add_text: { fontFamily: fonts.medium, fontSize: 14, color: colors.accent },
   small_cards: { flexDirection: "row", flexWrap: "wrap", gap: 12, marginTop: 14 },
   chips: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  chip: {
-    paddingHorizontal: 14, paddingVertical: 8, borderRadius: 999,
-    backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border,
-  },
+  chip: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 999, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
   chip_active: { backgroundColor: colors.accent, borderColor: colors.accent },
   chip_text: { fontFamily: fonts.medium, fontSize: 14, color: colors.textMuted },
   chip_text_active: { color: colors.text },
