@@ -1,4 +1,4 @@
-import { useLocalSearchParams } from "expo-router"
+import { useLocalSearchParams, router } from "expo-router"
 import { ScrollView, View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, RefreshControl } from "react-native"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { colors, fonts } from "@/styles/theme"
@@ -13,9 +13,11 @@ import { useState, useEffect } from "react"
 import { TextInput } from "react-native"
 import SelectField from "@/components/SelectField"
 import { useUpdateWrestler, WrestlerUpdate } from "@/hooks/useUpdateWrestler"
+import { useDeleteWrestler } from "@/hooks/useDeleteWrestler" 
 import { Gender, Allegiance, Role } from "@/types/wrestler"
 import WrestlerPickerModal from "@/components/WrestlerPickerModal"
 import HistoryModal from "@/components/HistoryModal"
+import ConfirmModal from "@/components/ConfirmModal" // 1. Imported your custom modal
 
 const RELATIONS = [
   ["Manager", "managerId"],
@@ -38,11 +40,15 @@ export default function WrestlerDetailScreen() {
   const { data: territories } = useTerritories()
   const { data: promotions } = usePromotions()
   const resolve = (id: number | null) => (id != null ? lookup?.get(id) ?? null : null)
+  
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState<WrestlerUpdate>({})
   const [pickerField, setPickerField] = useState<typeof RELATIONS[number][1] | null>(null)
   const update = useUpdateWrestler(wrestlerId)
+  const deleteWrestler = useDeleteWrestler()
+  
   const [historyOpen, setHistoryOpen] = useState(false)
+  const [deleteOpen, setDeleteOpen] = useState(false) // 2. Controls visibility
 
   const EDITABLE_KEYS = [
     "name",
@@ -63,7 +69,7 @@ export default function WrestlerDetailScreen() {
         gender: w.gender, allegiance: w.allegiance, role: w.role,
         territoryId: w.territoryId, promotionId: w.promotionId, finisherName: w.finisherName,
         popularity: w.popularity,
-        injured: !!w.injured, // Force strict boolean state mapping
+        injured: !!w.injured,
         managerId: w.managerId, partnerId: w.partnerId,
         storyFriendId: w.storyFriendId, storyEnemyId: w.storyEnemyId,
         realFriendId: w.realFriendId, realEnemyId: w.realEnemyId,
@@ -77,6 +83,15 @@ export default function WrestlerDetailScreen() {
       payload.popularity = Math.max(50, Math.min(100, payload.popularity))
     }
     update.mutate(payload, { onSuccess: () => setEditing(false) })
+  }
+
+  const handleDelete = () => {
+    deleteWrestler.mutate(wrestlerId, {
+      onSuccess: () => {
+        setDeleteOpen(false)
+        router.replace("/roster") // Safe stack redirection
+      }
+    })
   }
 
   const setPopularity = (raw: string) => {
@@ -147,9 +162,21 @@ export default function WrestlerDetailScreen() {
               />
             )}
           </TouchableOpacity>
+          
           <TouchableOpacity style={styles.icon_button} accessibilityLabel="Wrestler history" onPress={() => setHistoryOpen(true)}>
             <Ionicons name="book" color={colors.text} size={20} />
           </TouchableOpacity>
+
+          {/* Delete Trigger Button */}
+          {!editing && (
+            <TouchableOpacity 
+              style={[styles.icon_button, styles.delete_button_header]} 
+              accessibilityLabel="Delete wrestler" 
+              onPress={() => setDeleteOpen(true)}
+            >
+              <Ionicons name="trash-outline" color={colors.primary} size={20} />
+            </TouchableOpacity>
+          )}
         </View>
       </View>
 
@@ -171,7 +198,6 @@ export default function WrestlerDetailScreen() {
             </View>
 
             {(() => {
-              // Strict boolean resolution to prevent numeric 0 evaluations from breaking render trees
               const isInjured = !!(draft.injured !== undefined ? draft.injured : w.injured);
               return (
                 <TouchableOpacity
@@ -293,13 +319,27 @@ export default function WrestlerDetailScreen() {
         }}
         onClose={() => setPickerField(null)}
       />
+      
       <HistoryModal 
         visible={historyOpen} 
         wrestlerName={w.name} 
         events={[...(w.events ?? [])].sort(
           (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
         )}
-        onClose={() => setHistoryOpen(false)} />
+        onClose={() => setHistoryOpen(false)} 
+      />
+
+      {/* 3. Your Reusable Confirm Modal Integrated */}
+      <ConfirmModal
+        visible={deleteOpen}
+        title="Delete Wrestler"
+        message={`Are you sure you want to completely erase ${w.name}? This action cannot be undone.`}
+        confirmLabel="Delete"
+        destructive={true}
+        loading={deleteWrestler.isPending}
+        onConfirm={handleDelete}
+        onCancel={() => setDeleteOpen(false)}
+      />
     </ScrollView>
   )
 }
@@ -338,6 +378,9 @@ const styles = StyleSheet.create({
   icon_button: {
     width: 40, height: 40, borderRadius: 20,
     backgroundColor: colors.surface, alignItems: "center", justifyContent: "center",
+  },
+  delete_button_header: {
+    backgroundColor: `${colors.primary}15`,
   },
   tags: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 20 },
   info_block: { marginBottom: 24 },
