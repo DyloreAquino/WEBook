@@ -1,4 +1,3 @@
-// app/(tabs)/index.tsx (or wherever home lives)
 import { useState } from "react"
 import { ScrollView, View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, RefreshControl } from "react-native"
 import Ionicons from "@expo/vector-icons/Ionicons"
@@ -11,6 +10,8 @@ import PromotionPickerModal from "@/components/PromotionPickerModal"
 import RecentShowCard from "@/components/RecentShowCard"
 import ChampionshipCard from "@/components/ChampionshipCard"
 import { router } from "expo-router"
+import { useAuth } from "@/context/AuthContext"
+import { useActiveUniverse } from "@/context/UniverseContext"
 
 export default function HomeScreen() {
   const { promotionId, setPromotionId, loading: promoLoading } = useManagedPromotion()
@@ -18,6 +19,8 @@ export default function HomeScreen() {
   const { data: latestShow } = useLatestShow()
   const { data: championships, isLoading: champLoading, refetch, isRefetching } = useChampionshipsByPromotion(promotionId)
   const [pickerOpen, setPickerOpen] = useState(false)
+  const { logout } = useAuth()
+  const { clearUniverse } = useActiveUniverse()
 
   const promotionName = promotions?.find((p) => p.id === promotionId)?.name ?? "Select promotion"
   const mustPick = !promoLoading && promotionId == null
@@ -28,8 +31,8 @@ export default function HomeScreen() {
         <RefreshControl
           refreshing={isRefetching}
           onRefresh={refetch}
-          tintColor={colors.accent}      // iOS spinner color
-          colors={[colors.accent]}       // Android spinner color
+          tintColor={colors.accent}
+          colors={[colors.accent]}
         />
       }
     >
@@ -63,6 +66,18 @@ export default function HomeScreen() {
         (championships ?? []).map((c) => <ChampionshipCard key={c.id} championship={c} />)
       )}
 
+      {/* logout */}
+      <TouchableOpacity style={styles.logout} 
+        onPress={async () => {
+          clearUniverse()
+          await logout()
+        }} 
+        activeOpacity={0.7}
+      >
+        <Ionicons name="log-out-outline" color={colors.textMuted} size={16} />
+        <Text style={styles.logout_text}>Log out</Text>
+      </TouchableOpacity>
+
       <PromotionPickerModal
         visible={pickerOpen || mustPick}
         currentId={promotionId}
@@ -88,4 +103,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.accent,
     alignItems: "center", justifyContent: "center",
   },
+  logout: {
+    flexDirection: "row", alignItems: "center", gap: 6,
+    marginTop: 48, alignSelf: "center",
+  },
+  logout_text: { fontFamily: fonts.medium, fontSize: 13, color: colors.textMuted },
 })

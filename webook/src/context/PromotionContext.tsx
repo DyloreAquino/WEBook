@@ -19,7 +19,13 @@ export function PromotionProvider({ children }: { children: ReactNode }) {
 
   // 3. Delegate state setting mutations up to the active save slot
   const setPromotionId = async (id: number) => {
-    if (!activeUniverse) return
+    // CRITICAL SAFETY GUARD: If a user hasn't selected a save file slot, 
+    // do not let the UI fire network calls that break your database
+    if (!activeUniverse || !activeUniverse.id) {
+      console.warn("Aborted setPromotionId: No active universe save profile loaded yet.")
+      return
+    }
+    
     await updateCurrentPromotion(id)
   }
 
