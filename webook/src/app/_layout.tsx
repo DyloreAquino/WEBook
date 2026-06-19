@@ -6,6 +6,7 @@ import { Stack } from 'expo-router';
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { PromotionProvider } from "@/context/PromotionContext"
 import { colors } from "@/styles/theme";
+import { UniverseProvider } from "@/context/UniverseContext";
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, staleTime: 30_000 } },
@@ -30,16 +31,18 @@ export default function RootLayout() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <PromotionProvider>
-        <Stack screenOptions={{
-          headerStyle: { backgroundColor: colors.background },
-          headerTintColor: colors.text,
-          headerTitle: "",
-          headerShadowVisible: false,
-        }}>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }}/>
-        </Stack>
-      </PromotionProvider>
+      <UniverseProvider>
+        <PromotionProvider>
+          <Stack screenOptions={{
+            headerStyle: { backgroundColor: colors.background },
+            headerTintColor: colors.text,
+            headerTitle: "",
+            headerShadowVisible: false,
+          }}>
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }}/>
+          </Stack>
+        </PromotionProvider>
+      </UniverseProvider>
     </QueryClientProvider>
   );
 }

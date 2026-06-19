@@ -2,6 +2,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { api } from "@/lib/axios"
 import { Event, EventType, Placement } from "@/types/event"
+import { useActiveUniverse } from "@/context/UniverseContext" // 1. Import context
 
 export type EventCreate = {
   type: EventType
@@ -16,6 +17,9 @@ export type EventCreate = {
 
 export function useCreateEvent() {
   const qc = useQueryClient()
+  const { activeUniverse } = useActiveUniverse() // 2. Get active universe
+  const universeId = activeUniverse?.id
+
   return useMutation({
     mutationFn: async (input: EventCreate) => {
       // 1. create the base event
@@ -42,9 +46,9 @@ export function useCreateEvent() {
       return event
     },
     onSuccess: (event) => {
-      // refresh the parent show's detail so the new event appears
-      qc.invalidateQueries({ queryKey: ["show", event.showId] })
-      qc.invalidateQueries({ queryKey: ["shows"] })
+      // 3. Invalidate using the localized universe keys
+      qc.invalidateQueries({ queryKey: ["universe", universeId, "show", event.showId] })
+      qc.invalidateQueries({ queryKey: ["universe", universeId, "shows"] })
     },
   })
 }

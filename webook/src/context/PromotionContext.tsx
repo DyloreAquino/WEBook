@@ -1,35 +1,36 @@
 // context/PromotionContext.tsx
-import { createContext, useContext, useEffect, useState, ReactNode } from "react"
-import AsyncStorage from "@react-native-async-storage/async-storage"
-
-const STORAGE_KEY = "managedPromotionId"
+import { createContext, useContext, ReactNode } from "react"
+import { useActiveUniverse } from "./UniverseContext"
 
 type PromotionContextValue = {
   promotionId: number | null
-  setPromotionId: (id: number) => void
-  loading: boolean   // true while reading from storage on boot
+  setPromotionId: (id: number) => Promise<void>
+  loading: boolean 
 }
 
 const PromotionContext = createContext<PromotionContextValue | null>(null)
 
 export function PromotionProvider({ children }: { children: ReactNode }) {
-  const [promotionId, setId] = useState<number | null>(null)
-  const [loading, setLoading] = useState(true)
+  // 1. Consume the reactive universe context state layout
+  const { activeUniverse, updateCurrentPromotion, loading: universeLoading } = useActiveUniverse()
 
-  // load persisted value once on mount
-  useEffect(() => {
-    AsyncStorage.getItem(STORAGE_KEY)
-      .then((stored) => { if (stored) setId(Number(stored)) })
-      .finally(() => setLoading(false))
-  }, [])
+  // 2. Derive the current selected promotion strictly from the active save slot
+  const promotionId = activeUniverse ? activeUniverse.current_promotion_id : null
 
-  const setPromotionId = (id: number) => {
-    setId(id)
-    AsyncStorage.setItem(STORAGE_KEY, String(id))  // persist
+  // 3. Delegate state setting mutations up to the active save slot
+  const setPromotionId = async (id: number) => {
+    if (!activeUniverse) return
+    await updateCurrentPromotion(id)
   }
 
   return (
-    <PromotionContext.Provider value={{ promotionId, setPromotionId, loading }}>
+    <PromotionContext.Provider 
+      value={{ 
+        promotionId, 
+        setPromotionId, 
+        loading: universeLoading // loading is now tied to the universe initialization sequence
+      }}
+    >
       {children}
     </PromotionContext.Provider>
   )

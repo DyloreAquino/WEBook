@@ -2,6 +2,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { api } from "@/lib/axios"
 import { Event, EventType, Placement } from "@/types/event"
+import { useActiveUniverse } from "@/context/UniverseContext" // 1. Import context
 
 export type EventUpdate = {
   type?: EventType
@@ -16,6 +17,9 @@ export type EventUpdate = {
 
 export function useUpdateEvent(id: number, showId: number) {
   const qc = useQueryClient()
+  const { activeUniverse } = useActiveUniverse() // 2. Get active universe
+  const universeId = activeUniverse?.id
+
   return useMutation({
     mutationFn: async (input: EventUpdate) => {
       // base fields PATCH (only if any base field changed)
@@ -26,6 +30,7 @@ export function useUpdateEvent(id: number, showId: number) {
       if (input.championshipId !== undefined) base.championshipId = input.championshipId
       if (input.notes !== undefined) base.notes = input.notes
       if (input.rating !== undefined) base.rating = input.rating
+      
       if (Object.keys(base).length > 0) {
         await api.patch(`/events/${id}`, base)
       }
@@ -39,8 +44,9 @@ export function useUpdateEvent(id: number, showId: number) {
       }
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["event", id] })
-      qc.invalidateQueries({ queryKey: ["show", showId] })
+      // 3. Invalidate using the active universe-scoped cache paths
+      qc.invalidateQueries({ queryKey: ["universe", universeId, "event", id] })
+      qc.invalidateQueries({ queryKey: ["universe", universeId, "show", showId] })
     },
   })
 }

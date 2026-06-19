@@ -2,6 +2,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { api } from "@/lib/axios"
 import { TitleReign } from "@/types/title_reign"
+import { useActiveUniverse } from "@/context/UniverseContext" // 1. Import context
 
 type DateFields = {
   yearStart: number; monthStart: number; weekStart: number
@@ -13,6 +14,9 @@ export type ReignUpdate = Partial<DateFields> & { wrestlerIds?: number[] }
 
 export function useCreateReign(championshipId: number) {
   const qc = useQueryClient()
+  const { activeUniverse } = useActiveUniverse() // 2. Get active universe
+  const universeId = activeUniverse?.id
+
   return useMutation({
     mutationFn: async (input: ReignCreate) => {
       // 1. create the reign
@@ -28,12 +32,18 @@ export function useCreateReign(championshipId: number) {
       }
       return reign
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["championship", championshipId] }),
+    onSuccess: () => {
+      // 3. Invalidate using universe scope
+      qc.invalidateQueries({ queryKey: ["universe", universeId, "championship", championshipId] })
+    },
   })
 }
 
 export function useUpdateReign(championshipId: number, reignId: number) {
   const qc = useQueryClient()
+  const { activeUniverse } = useActiveUniverse() // 2. Get active universe
+  const universeId = activeUniverse?.id
+
   return useMutation({
     mutationFn: async (input: ReignUpdate) => {
       // base date fields PATCH
@@ -45,14 +55,23 @@ export function useUpdateReign(championshipId: number, reignId: number) {
       // holders re-assign
       if (input.wrestlerIds) await api.put(`/title_reigns/${reignId}/wrestlers`, { wrestlerIds: input.wrestlerIds })
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["championship", championshipId] }),
+    onSuccess: () => {
+      // 3. Invalidate using universe scope
+      qc.invalidateQueries({ queryKey: ["universe", universeId, "championship", championshipId] })
+    },
   })
 }
 
 export function useEndReign(championshipId: number) {
   const qc = useQueryClient()
+  const { activeUniverse } = useActiveUniverse() // 2. Get active universe
+  const universeId = activeUniverse?.id
+
   return useMutation({
     mutationFn: async (reignId: number) => { await api.patch(`/title_reigns/${reignId}/end`) },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["championship", championshipId] }),
+    onSuccess: () => {
+      // 3. Invalidate using universe scope
+      qc.invalidateQueries({ queryKey: ["universe", universeId, "championship", championshipId] })
+    },
   })
 }

@@ -1,24 +1,21 @@
 // hooks/useDeleteEvent.ts
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { api } from "@/lib/axios"
+import { useActiveUniverse } from "@/context/UniverseContext" // 1. Import context
 
 export function useDeleteEvent(showId: number) {
   const qc = useQueryClient()
+  const { activeUniverse } = useActiveUniverse() // 2. Get active universe
+  const universeId = activeUniverse?.id
 
   return useMutation({
-    // Simplified syntax: directly return the promise instead of using async/await wrapping
     mutationFn: (id: number) => api.delete(`/events/${id}`),
     
-    // We pass variables (the event id) to onSuccess so we know exactly which event was deleted
     onSuccess: (_, id) => {
-      // 1. Refresh the specific show detail view
-      qc.invalidateQueries({ queryKey: ["show", showId] })
-      
-      // 2. Refresh the global shows dashboard list (keeps event counts accurate)
-      qc.invalidateQueries({ queryKey: ["shows"] })
-      
-      // 3. Completely scrub the deleted event's data from active memory cache
-      qc.removeQueries({ queryKey: ["event", id] })
+      // 3. Invalidate and remove query keys matching your universe partition layout
+      qc.invalidateQueries({ queryKey: ["universe", universeId, "show", showId] })
+      qc.invalidateQueries({ queryKey: ["universe", universeId, "shows"] })
+      qc.removeQueries({ queryKey: ["universe", universeId, "event", id] })
     },
   })
 }
